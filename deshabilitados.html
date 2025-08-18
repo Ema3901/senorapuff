@@ -1,364 +1,437 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Productos Desactivados - Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-    <link href="css/style.css" rel="stylesheet" />
-    <link href="css/index.css" rel="stylesheet" />
-    <link href="css/filter.css" rel="stylesheet" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Productos Desactivados - Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+  <link href="css/index.css" rel="stylesheet" />
+  <link href="css/filter.css" rel="stylesheet" />
+  <link href="css/load.css" rel="stylesheet" />
+  <style>
+    /* Mínimos para expansión y UX */
+    .expanded-content { display: none; }
+    .expanded-content.show { display: table-row; }
+    .expand-icon { cursor: pointer; transition: transform .2s ease; margin-right:.25rem; }
+    .expand-icon.expanded { transform: rotate(90deg); }
+    .table-container { position: relative; }
+  </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header" title="Menú">Inventario</div>
-            <nav class="sidebar-nav">
-                <ul>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header" title="Menú">Inventario</div>
+      <nav class="sidebar-nav">
+        <ul>
           <li><a href="index.html"><i class="fas fa-boxes"></i> <span>Inventario</span></a></li>
           <li><a href="deshabilitados.html"><i class="fas fa-trash-alt"></i> <span>Desactivados</span></a></li>
           <li><a href="pendientes.html"><i class="fas fa-clock"></i> <span>Pendientes Check</span></a></li>
           <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Panel administrativo</a></li>
-                </ul>
-            </nav>
-        </aside>
+        </ul>
+      </nav>
+    </aside>
 
-        <main class="main-content">
-            <header class="main-header d-flex align-items-center justify-content-between flex-wrap">
-                <h1>Productos Desactivados</h1>
-                <div class="user-box dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <img src="img/stock.jpg" alt="User Avatar" id="profileDropdown"/>
-                    <span>Ann Lee</span>
-                    <i class="fas fa-chevron-down ml-2"></i>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                        <li><a class="dropdown-item" href="#" onclick="window.location.href='login.html'; return false;">Cerrar sesión</a></li>
-                    </ul>
-                </div>
-            </header>
-
-            <div class="divider"></div>
-
-            <div class="controls d-flex flex-wrap align-items-center gap-3 mb-3">
-                <div class="search-box flex-grow-1 position-relative">
-                    <div class="search-wrapper">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="busquedaInput" placeholder="Buscar por nombre o ID" />
-                        <i class="fas fa-times-circle clear-icon" style="position: absolute; right: 10px; cursor: pointer; color: #aaa;" onclick="limpiarBusqueda()"></i>
-                    </div>
-                </div>
-                <div class="filters-header d-flex justify-content-between w-100">
-                    <div class="filters d-flex gap-2 align-items-center">
-                        <button class="btn-filter" data-bs-toggle="modal" data-bs-target="#filterModal">
-                            <i class="fas fa-filter"></i> Filtrar
-                        </button>
-                        <button class="btn-filter" aria-label="Restablecer filtros" onclick="resetFilters()">
-                            Restablecer <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
-                    <div class="header-actions mb-3 d-flex gap-2">
-                        <button class="btn btn-success" id="reactivarBtn">
-                            <i class="fas fa-power-off"></i> Reactivar
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <div id="noProductsMessage" style="display: none; text-align: center; padding: 3rem; color: #6c757d;">
-                    <i class="fas fa-archive" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                    <h4>No hay productos deshabilitados</h4>
-                </div>
-                
-                <table id="inventoryTable">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" aria-label="Seleccionar todo" /></th>
-                            <th>Número de item</th>
-                            <th>Nombre del taller o laboratorio</th>
-                            <th>Clase</th>
-                            <th>Nombre del equipo</th>
-                            <th>Cantidad en existencia</th>
-                            <th>Ubicación del equipo</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventoryTableBody">
-                        <!-- Las filas se generarán dinámicamente -->
-                    </tbody>
-                </table>
-            </div>
-        </main>
-    </div>
-
-    <!-- Modal de Filtros -->
-    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="filterModalLabel">
-                        <i class="fas fa-filter me-2"></i>Filtros de Productos Desactivados
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="filterForm">
-                        <div class="filter-section">
-                            <h6><i class="fas fa-filter me-2"></i>Filtros de Inventario</h6>
-                            <div class="filter-row">
-                                <select class="form-select" id="filterNombreTaller">
-                                    <option selected>Taller/Laboratorio</option>
-                                </select>
-                                <select class="form-select" id="filterClase">
-                                    <option selected>Clase</option>
-                                </select>
-                                <select class="form-select" id="filterMarca">
-                                    <option selected>Marca</option>
-                                </select>
-                                <select class="form-select" id="filterFabricante">
-                                    <option selected>Fabricante</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-outline-danger me-2" onclick="resetFilters()">
-                        <i class="fas fa-sync-alt me-1"></i>Limpiar Todo
-                    </button>
-                    <button type="button" class="btn btn-primary" id="applyFilters">
-                        <i class="fas fa-check me-1"></i>Aplicar Filtros
-                    </button>
-                </div>
-            </div>
+    <main class="main-content">
+      <header class="main-header d-flex align-items-center justify-content-between flex-wrap">
+        <h1>Productos Desactivados</h1>
+        <div class="user-box dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="img/stock.jpg" alt="User Avatar" id="profileDropdown" loading="lazy" decoding="async"/>
+          <span>Ann Lee</span>
+          <i class="fas fa-chevron-down ml-2"></i>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+            <li><a class="dropdown-item" href="#" onclick="window.location.href='login.html'; return false;">Cerrar sesión</a></li>
+          </ul>
         </div>
+      </header>
+
+      <div class="divider"></div>
+
+      <div class="controls d-flex flex-wrap align-items-center gap-3 mb-3">
+        <div class="search-box flex-grow-1 position-relative">
+          <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="busquedaInput" placeholder="Buscar por nombre o ID" />
+            <i class="fas fa-times-circle clear-icon" style="position: absolute; right: 10px; cursor: pointer; color: #aaa;" onclick="limpiarBusqueda()"></i>
+          </div>
+        </div>
+        <div class="filters-header d-flex justify-content-between w-100">
+          <div class="filters d-flex gap-2 align-items-center">
+            <button class="btn-filter" data-bs-toggle="modal" data-bs-target="#filterModal">
+              <i class="fas fa-filter"></i> Filtrar
+            </button>
+            <button class="btn-filter" aria-label="Restablecer filtros" onclick="resetFilters()">
+              Restablecer <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+          <div class="header-actions mb-3 d-flex gap-2">
+            <button class="btn btn-success" id="reactivarBtn">
+              <i class="fas fa-power-off"></i> Reactivar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container" id="tablaContainer">
+        <div id="noProductsMessage" style="display: none; text-align: center; padding: 3rem; color: #6c757d;">
+          <i class="fas fa-archive" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+          <h4>No hay productos deshabilitados</h4>
+        </div>
+        
+        <table id="inventoryTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" aria-label="Seleccionar todo" /></th>
+              <th>Número de item</th>
+              <th>Nombre del taller o laboratorio</th>
+              <th>Clase</th>
+              <th>Nombre del equipo</th>
+              <th>Cantidad en existencia</th>
+              <th>Ubicación del equipo</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTableBody">
+            <!-- Las filas se generan dinámicamente -->
+          </tbody>
+        </table>
+        <!-- Botón "Cargar más" y sentinel se inyectan aquí -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Filtros -->
+  <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="filterModalLabel">
+            <i class="fas fa-filter me-2"></i>Filtros de Productos Desactivados
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="filterForm">
+            <div class="filter-section">
+              <h6><i class="fas fa-filter me-2"></i>Filtros de Inventario</h6>
+              <div class="filter-row">
+                <select class="form-select" id="filterNombreTaller">
+                  <option selected>Taller/Laboratorio</option>
+                </select>
+                <select class="form-select" id="filterClase">
+                  <option selected>Clase</option>
+                </select>
+                <select class="form-select" id="filterMarca">
+                  <option selected>Marca</option>
+                </select>
+                <select class="form-select" id="filterFabricante">
+                  <option selected>Fabricante</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>Cancelar
+          </button>
+          <button type="button" class="btn btn-outline-danger me-2" onclick="resetFilters()">
+            <i class="fas fa-sync-alt me-1"></i>Limpiar Todo
+          </button>
+          <button type="button" class="btn btn-primary" id="applyFilters">
+            <i class="fas fa-check me-1"></i>Aplicar Filtros
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
-    
-    <!-- Tus scripts originales -->
-    <script src="js/session-manager.js"></script>
+  <!-- Libs -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js" defer></script>
 
+  <!-- Tus scripts -->
+  <script src="js/session-manager.js" defer></script>
+  <script src="js/loadScreen.js" defer></script>
 
-    <script>
-        // Variable global para almacenar los datos del inventario desactivado
-        let inventoryData = [];
+  <script>
+    // ================== Estado ==================
+    let inventoryData = [];          // Todo el dataset (desactivados)
+    let inventoryView = [];          // Vista filtrada/buscada
+    const BATCH_SIZE = 60;           // Lote de render
+    let nextIndexToRender = 0;
 
-        // Función para cargar datos de la API (solo productos desactivados)
-        async function loadInventoryData() {
-            try {
-                // Cargar datos de la API de InventarioCombinado
-                const response = await fetch('https://healtyapi.bsite.net/api/InventarioCombinado/Excel');
-                const data = await response.json();
-                
-                // Filtrar solo productos con Status: "Desactivado"
-                const deactivatedProducts = data.filter(item => item.Status === "Desactivado");
-                
-                // Mapear los datos de la API (solo productos desactivados)
-                inventoryData = deactivatedProducts.map(item => ({
-                    numeroItem: item.NumeroDeItem || 'N/A',
-                    nombreTaller: item.NombreDeTallerOLaboratorio || 'N/A',
-                    clase: item.MaterialHerramientaOInsumo || 'N/A',
-                    nombreEquipo: item.Nombre || 'Sin nombre',
-                    cantidadExistencia: item.CantidadEnExistencia || 0,
-                    ubicacionEquipo: item.Ubicacion || 'N/A',
-                    descripcion: item.Descripcion || 'Sin descripción',
-                    marca: item.Marca || 'N/A',
-                    fabricante: item.Fabricante || 'N/A',
-                    modelo: item.Modelo || 'N/A',
-                    numeroSerie: item.NumeroSerie || 'N/A',
-                    codigoInventario: item.CodigoDeInventario || 'N/A',
-                    especificacionesTecnicas: item.EspecificacionesTecnicas || 'No especificadas',
-                    fotografia: item.Fotografia || null,
-                    observaciones: item.Observaciones || 'Sin observaciones'
-                }));
-
-                // Verificar si hay productos desactivados
-                if (inventoryData.length === 0) {
-                    showNoProductsMessage();
-                } else {
-                    generateTableRows();
-                }
-                
-            } catch (error) {
-                console.error('Error cargando datos del inventario:', error);
-                showNoProductsMessage();
-            }
+    // Observador de imágenes (lazy)
+    const imgObserver = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          const src = img.getAttribute('data-src');
+          if (src) {
+            img.src = src;
+            img.removeAttribute('data-src');
+          }
+          obs.unobserve(img);
         }
+      });
+    }, { root: null, rootMargin: '200px 0px', threshold: .01 });
 
-        // Función para mostrar mensaje cuando no hay productos desactivados
-        function showNoProductsMessage() {
-            document.getElementById('noProductsMessage').style.display = 'block';
-            document.getElementById('inventoryTable').style.display = 'none';
+    // Sentinel e infinite scroll
+    let sentinel;
+    const listObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && nextIndexToRender < inventoryView.length) {
+          renderNextBatch();
         }
+      });
+    }, { root: null, rootMargin: '800px 0px', threshold: 0 });
 
-        // Función para generar las filas de la tabla
-        function generateTableRows() {
-            document.getElementById('noProductsMessage').style.display = 'none';
-            document.getElementById('inventoryTable').style.display = 'table';
-            
-            const tbody = document.getElementById('inventoryTableBody');
-            tbody.innerHTML = '';
+    // ================== Data ==================
+    async function loadInventoryData() {
+      try {
+        const response = await fetch('https://healtyapi.bsite.net/api/InventarioCombinado/Excel');
+        const data = await response.json();
 
-            inventoryData.forEach((item, index) => {
-                // Fila principal
-                const mainRow = document.createElement('tr');
-                mainRow.className = 'main-row';
-                mainRow.innerHTML = `
-                    <td><input type="checkbox" /></td>
-                    <td>
-                        <i class="fas fa-chevron-right expand-icon" data-index="${index}"></i>
-                        ${item.numeroItem}
-                    </td>
-                    <td>${item.nombreTaller}</td>
-                    <td>${item.clase}</td>
-                    <td>${item.nombreEquipo}</td>
-                    <td>${item.cantidadExistencia}</td>
-                    <td>${item.ubicacionEquipo}</td>
-                `;
+        const deactivatedProducts = data.filter(item => item.Status === "Desactivado");
+        inventoryData = deactivatedProducts.map(item => ({
+          numeroItem: item.NumeroDeItem || 'N/A',
+          nombreTaller: item.NombreDeTallerOLaboratorio || 'N/A',
+          clase: item.MaterialHerramientaOInsumo || 'N/A',
+          nombreEquipo: item.Nombre || 'Sin nombre',
+          cantidadExistencia: item.CantidadEnExistencia || 0,
+          ubicacionEquipo: item.Ubicacion || 'N/A',
+          descripcion: item.Descripcion || 'Sin descripción',
+          marca: item.Marca || 'N/A',
+          fabricante: item.Fabricante || 'N/A',
+          modelo: item.Modelo || 'N/A',
+          numeroSerie: item.NumeroSerie || 'N/A',
+          codigoInventario: item.CodigoDeInventario || 'N/A',
+          especificacionesTecnicas: item.EspecificacionesTecnicas || 'No especificadas',
+          fotografia: item.Fotografia || null,
+          observaciones: item.Observaciones || 'Sin observaciones'
+        }));
 
-                // Fila expandida
-                const expandedRow = document.createElement('tr');
-                expandedRow.className = 'expanded-content';
-                expandedRow.id = `expanded-${index}`;
-                expandedRow.innerHTML = `
-                    <td colspan="7">
-                        <div class="expanded-details">
-                            <div class="detail-grid">
-                                <div class="detail-item">
-                                    <div class="detail-label">Descripción:</div>
-                                    <div class="detail-value">${item.descripcion}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Marca:</div>
-                                    <div class="detail-value">${item.marca}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Fabricante:</div>
-                                    <div class="detail-value">${item.fabricante}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Modelo:</div>
-                                    <div class="detail-value">${item.modelo}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Número de serie:</div>
-                                    <div class="detail-value">${item.numeroSerie}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Código de inventario:</div>
-                                    <div class="detail-value">${item.codigoInventario}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Especificaciones técnicas:</div>
-                                    <div class="detail-value">${item.especificacionesTecnicas}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Observaciones:</div>
-                                    <div class="detail-value">${item.observaciones}</div>
-                                </div>
-                            </div>
-                            <div class="image-container">
-                                ${item.fotografia ? `<img src="${item.fotografia}" alt="${item.nombreEquipo}" class="equipment-image" />` : ''}
-                            </div>
-                        </div>
-                    </td>
-                `;
-
-                tbody.appendChild(mainRow);
-                tbody.appendChild(expandedRow);
-            });
+        inventoryView = inventoryData.slice(); // Inicializa la vista
+        if (inventoryView.length === 0) {
+          showNoProductsMessage();
+        } else {
+          hideNoProductsMessage();
+          populateFilterOptions();
+          generateTableRows();
         }
+      } catch (error) {
+        console.error('Error cargando datos del inventario:', error);
+        showNoProductsMessage();
+      }
+    }
 
-        // Función para manejar la expansión/contracción
-        function toggleExpansion(index) {
-            const expandedRow = document.getElementById(`expanded-${index}`);
-            const icon = document.querySelector(`[data-index="${index}"]`);
-            
-            if (expandedRow.classList.contains('show')) {
-                expandedRow.classList.remove('show');
-                icon.classList.remove('expanded');
-            } else {
-                expandedRow.classList.add('show');
-                icon.classList.add('expanded');
-            }
-        }
+    // ================== Render (lazy) ==================
+    function renderNextBatch() {
+      const tbody = document.getElementById('inventoryTableBody');
+      const end = Math.min(nextIndexToRender + BATCH_SIZE, inventoryView.length);
 
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Cargar datos al inicializar la página
-            loadInventoryData();
-            
-            // Agregar event listeners para expandir al hacer clic en toda la fila
-            document.addEventListener('click', function(e) {
-                // Verificar si se hizo clic en un checkbox
-                if (e.target.type === 'checkbox') {
-                    return; // No expandir si se hace clic en checkbox
-                }
-                
-                // Buscar la fila principal más cercana
-                const row = e.target.closest('.main-row');
-                if (row) {
-                    // Buscar el ícono de expansión en esta fila
-                    const expandIcon = row.querySelector('.expand-icon');
-                    if (expandIcon) {
-                        const index = parseInt(expandIcon.dataset.index);
-                        toggleExpansion(index);
-                    }
-                }
-            });
+      for (let index = nextIndexToRender; index < end; index++) {
+        const item = inventoryView[index];
 
-            // Event listener para el botón de reactivar
-            document.getElementById('reactivarBtn').addEventListener('click', function() {
-                console.log('Función de reactivar - pendiente de implementar');
-                // Aquí irá la lógica de reactivación
-            });
+        const mainRow = document.createElement('tr');
+        mainRow.className = 'main-row';
+        mainRow.innerHTML = `
+          <td><input type="checkbox" /></td>
+          <td>
+            <i class="fas fa-chevron-right expand-icon" data-index="${index}"></i>
+            ${item.numeroItem}
+          </td>
+          <td>${item.nombreTaller}</td>
+          <td>${item.clase}</td>
+          <td>${item.nombreEquipo}</td>
+          <td>${item.cantidadExistencia}</td>
+          <td>${item.ubicacionEquipo}</td>
+        `;
+
+        const expandedRow = document.createElement('tr');
+        expandedRow.className = 'expanded-content';
+        expandedRow.id = `expanded-${index}`;
+        expandedRow.innerHTML = `
+          <td colspan="7">
+            <div class="expanded-details">
+              <div class="detail-grid">
+                <div class="detail-item"><div class="detail-label">Descripción:</div><div class="detail-value">${item.descripcion}</div></div>
+                <div class="detail-item"><div class="detail-label">Marca:</div><div class="detail-value">${item.marca}</div></div>
+                <div class="detail-item"><div class="detail-label">Fabricante:</div><div class="detail-value">${item.fabricante}</div></div>
+                <div class="detail-item"><div class="detail-label">Modelo:</div><div class="detail-value">${item.modelo}</div></div>
+                <div class="detail-item"><div class="detail-label">Número de serie:</div><div class="detail-value">${item.numeroSerie}</div></div>
+                <div class="detail-item"><div class="detail-label">Código de inventario:</div><div class="detail-value">${item.codigoInventario}</div></div>
+                <div class="detail-item"><div class="detail-label">Especificaciones técnicas:</div><div class="detail-value">${item.especificacionesTecnicas}</div></div>
+                <div class="detail-item"><div class="detail-label">Observaciones:</div><div class="detail-value">${item.observaciones}</div></div>
+              </div>
+              <div class="image-container">
+                ${item.fotografia ? `<img data-src="${item.fotografia}" alt="${item.nombreEquipo}" class="equipment-image lazy-img" loading="lazy" decoding="async"/>` : ''}
+              </div>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(mainRow);
+        tbody.appendChild(expandedRow);
+      }
+
+      document.querySelectorAll('.lazy-img[data-src]').forEach(img => imgObserver.observe(img));
+      nextIndexToRender = end;
+      toggleLoadMoreVisibility();
+    }
+
+    function generateTableRows() {
+      const tbody = document.getElementById('inventoryTableBody');
+      tbody.innerHTML = '';
+      nextIndexToRender = 0;
+      renderNextBatch();
+    }
+
+    // ================== UX: botón cargar más y sentinel ==================
+    function ensureLoadMoreButton() {
+      let btn = document.getElementById('loadMoreRows');
+      if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'loadMoreRows';
+        btn.className = 'btn btn-outline-secondary mt-3';
+        btn.textContent = 'Cargar más';
+        btn.addEventListener('click', renderNextBatch);
+        document.getElementById('tablaContainer').appendChild(btn);
+      }
+    }
+
+    function ensureSentinel() {
+      if (!sentinel) {
+        sentinel = document.createElement('div');
+        sentinel.id = 'scrollSentinel';
+        sentinel.style.height = '1px';
+        document.getElementById('tablaContainer').appendChild(sentinel);
+        listObserver.observe(sentinel);
+      }
+    }
+
+    function toggleLoadMoreVisibility() {
+      ensureLoadMoreButton();
+      const btn = document.getElementById('loadMoreRows');
+      btn.style.display = (nextIndexToRender >= inventoryView.length) ? 'none' : 'inline-block';
+    }
+
+    // ================== Mensajes ==================
+    function showNoProductsMessage() {
+      document.getElementById('noProductsMessage').style.display = 'block';
+      document.getElementById('inventoryTable').style.display = 'none';
+    }
+    function hideNoProductsMessage() {
+      document.getElementById('noProductsMessage').style.display = 'none';
+      document.getElementById('inventoryTable').style.display = 'table';
+    }
+
+    // ================== Expansión ==================
+    function toggleExpansion(index) {
+      const expandedRow = document.getElementById(`expanded-${index}`);
+      const icon = document.querySelector(`.expand-icon[data-index="${index}"]`);
+
+      if (!expandedRow || !icon) return;
+
+      if (expandedRow.classList.contains('show')) {
+        expandedRow.classList.remove('show');
+        icon.classList.remove('expanded');
+      } else {
+        expandedRow.classList.add('show');
+        icon.classList.add('expanded');
+        // Asegura observar imágenes visibles tras expandir
+        expandedRow.querySelectorAll('.lazy-img[data-src]').forEach(img => imgObserver.observe(img));
+      }
+    }
+
+    // ================== Búsqueda & Filtros (básico) ==================
+    function aplicarBusqueda(term) {
+      const t = term.trim().toLowerCase();
+      if (!t) {
+        inventoryView = inventoryData.slice();
+      } else {
+        inventoryView = inventoryData.filter(item => {
+          const hay = [
+            item.numeroItem, item.nombreTaller, item.clase, item.nombreEquipo,
+            String(item.cantidadExistencia), item.ubicacionEquipo, item.descripcion,
+            item.marca, item.fabricante, item.modelo, item.numeroSerie, item.codigoInventario
+          ].join(' ').toLowerCase();
+          return hay.includes(t);
         });
+      }
+      if (inventoryView.length === 0) {
+        showNoProductsMessage();
+      } else {
+        hideNoProductsMessage();
+      }
+      generateTableRows();
+    }
 
-        // Función para limpiar búsqueda
-        function limpiarBusqueda() {
-            document.getElementById('busquedaInput').value = '';
-            // Mostrar todas las filas
-            const rows = document.querySelectorAll('.main-row');
-            rows.forEach(row => {
-                row.style.display = '';
-                const nextRow = row.nextElementSibling;
-                if (nextRow && nextRow.classList.contains('expanded-content') && nextRow.classList.contains('show')) {
-                    nextRow.style.display = '';
-                }
-            });
+    function limpiarBusqueda() {
+      const input = document.getElementById('busquedaInput');
+      input.value = '';
+      aplicarBusqueda('');
+    }
+
+    function populateFilterOptions() {
+      // Opcional: poblar selects si lo deseas (placeholder)
+      // Ejemplo:
+      // fillSelect('filterNombreTaller', [...new Set(inventoryData.map(i=>i.nombreTaller))]);
+    }
+    function fillSelect(id, values) {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = `<option selected>${sel.options[0]?.text || 'Selecciona'}</option>` + 
+        values.sort().map(v => `<option value="${v}">${v}</option>`).join('');
+    }
+    function resetFilters() {
+      // Placeholder: limpia selects si los usas y re-renderiza la vista
+      aplicarBusqueda(document.getElementById('busquedaInput').value || '');
+    }
+
+    // ================== Eventos ==================
+    document.addEventListener('DOMContentLoaded', () => {
+      ensureLoadMoreButton();
+      ensureSentinel();
+      loadInventoryData();
+
+      // Expandir filas (ignora clics en checkbox/botones)
+      document.addEventListener('click', function(e) {
+        if (e.target.type === 'checkbox' || e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+        const row = e.target.closest('.main-row');
+        if (row) {
+          const expandIcon = row.querySelector('.expand-icon');
+          if (expandIcon) {
+            const index = parseInt(expandIcon.dataset.index);
+            toggleExpansion(index);
+          }
         }
+      });
 
-        // Función para restablecer filtros
-        function resetFilters() {
-            console.log('Restableciendo filtros...');
-        }
+      // Seleccionar todo
+      document.querySelector('input[aria-label="Seleccionar todo"]').addEventListener('change', function(e) {
+        const checkboxes = document.querySelectorAll('#inventoryTableBody input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = e.target.checked);
+      });
 
-        // Funcionalidad de búsqueda
-        document.getElementById('busquedaInput').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('.main-row');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    row.style.display = '';
-                    const nextRow = row.nextElementSibling;
-                    if (nextRow && nextRow.classList.contains('expanded-content') && nextRow.classList.contains('show')) {
-                        nextRow.style.display = '';
-                    }
-                } else {
-                    row.style.display = 'none';
-                    const nextRow = row.nextElementSibling;
-                    if (nextRow && nextRow.classList.contains('expanded-content')) {
-                        nextRow.style.display = 'none';
-                    }
-                }
-            });
-        });
-    </script>
+      // Reactivar (pendiente de implementación)
+      document.getElementById('reactivarBtn').addEventListener('click', function() {
+        console.log('Función de reactivar - pendiente de implementar');
+      });
+
+      // Búsqueda
+      document.getElementById('busquedaInput').addEventListener('input', function(e) {
+        aplicarBusqueda(e.target.value);
+      });
+
+      // Aplicar filtros (placeholder)
+      document.getElementById('applyFilters').addEventListener('click', () => {
+        // Aquí aplicarías lógica de filtros y luego:
+        aplicarBusqueda(document.getElementById('busquedaInput').value || '');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
+        modal?.hide();
+      });
+    });
+  </script>
 </body>
 </html>
