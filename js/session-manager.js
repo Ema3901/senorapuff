@@ -1,6 +1,7 @@
 class SessionManager {
   constructor() {
     this.user = null;
+    this.apiBaseUrl = 'https://inventariolabsapi.uttn.app/api';
     this.init();
   }
 
@@ -20,13 +21,72 @@ class SessionManager {
     console.log('=== FIN INIT SESSION MANAGER ===');
   }
 
+  // Método principal de login
+  async login(email, password) {
+    try {
+      console.log('Iniciando proceso de login para:', email);
+      
+      // Obtener todos los usuarios
+      const response = await fetch(`${this.apiBaseUrl}/users`);
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      const users = await response.json();
+      console.log('Usuarios obtenidos:', users.length);
+
+      // Buscar usuario por email y password
+      const user = users.find(u => 
+        u.email === email && u.password === password
+      );
+
+      if (!user) {
+        throw new Error('Credenciales incorrectas');
+      }
+
+      // Guardar usuario en sesión
+      this.user = user;
+      this.saveUserToSession(user);
+      
+      console.log('Login exitoso para:', user.name);
+      
+      // Actualizar interfaz
+      this.updateUserInterface();
+      
+      return {
+        success: true,
+        user: user,
+        message: 'Login exitoso'
+      };
+
+    } catch (error) {
+      console.error('Error en login:', error);
+      return {
+        success: false,
+        message: error.message || 'Error al iniciar sesión'
+      };
+    }
+  }
+
+  // Guardar usuario en sessionStorage
+  saveUserToSession(user) {
+    try {
+      const userData = JSON.stringify(user);
+      sessionStorage.setItem("usuario", userData);
+      console.log("Usuario guardado en sesión:", user.name);
+    } catch (error) {
+      console.error("Error al guardar usuario en sesión:", error);
+    }
+  }
+
   // Cargar usuario desde sessionStorage
   loadUserFromSession() {
     const userData = sessionStorage.getItem("usuario");
     if (userData) {
       try {
         this.user = JSON.parse(userData);
-        console.log("Usuario cargado desde sesión:", this.user);
+        console.log("Usuario cargado desde sesión:", this.user.name);
       } catch (error) {
         console.error("Error al parsear datos de usuario:", error);
         this.clearSession();
@@ -44,7 +104,7 @@ class SessionManager {
     }
 
     // Verificar que el usuario tenga los datos necesarios
-    if (this.user && (!this.user.id_user || !this.user.name)) {
+    if (this.user && (!this.user.id_user || !this.user.name || !this.user.email)) {
       console.warn("Datos de usuario incompletos, limpiando sesión");
       this.clearSession();
       return false;
@@ -69,9 +129,9 @@ class SessionManager {
     // Ocultar la imagen de perfil por defecto ya que no hay fotos implementadas
     this.hideProfileImage();
 
-    // Mostrar/Ocultar los enlaces solo para id_rol = 4
-    console.log('Llamando a toggleAdminLinks...');
-    this.toggleAdminLinks();
+    // Mostrar/Ocultar los enlaces según el rol
+    console.log('Llamando a toggleRoleBasedElements...');
+    this.toggleRoleBasedElements();
 
     console.log('=== Fin updateUserInterface ===');
   }
@@ -125,7 +185,9 @@ class SessionManager {
 
     // Insertar antes del nombre
     const userName = userBox.querySelector('span');
-    userBox.insertBefore(initialsElement, userName);
+    if (userName) {
+      userBox.insertBefore(initialsElement, userName);
+    }
   }
 
   // Obtener las iniciales del nombre del usuario
@@ -155,7 +217,7 @@ class SessionManager {
     if (!this.user || !this.user.id_user) return false;
 
     try {
-      const response = await fetch(`https://inventariolabsapi.uttn.app/api/users/${this.user.id_user}`);
+      const response = await fetch(`${this.apiBaseUrl}/users/${this.user.id_user}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -165,7 +227,7 @@ class SessionManager {
 
       // Actualizar los datos en memoria y en sessionStorage
       this.user = updatedUser;
-      sessionStorage.setItem("usuario", JSON.stringify(updatedUser));
+      this.saveUserToSession(updatedUser);
 
       // Actualizar la interfaz
       this.updateUserInterface();
@@ -183,6 +245,7 @@ class SessionManager {
   clearSession() {
     this.user = null;
     sessionStorage.removeItem("usuario");
+    localStorage.removeItem("rememberMe");
   }
 
   // Cerrar sesión
@@ -214,79 +277,104 @@ class SessionManager {
     return result;
   }
 
-  // Verificar si es administrador
-  isAdmin() {
-    console.log('=== isAdmin Debug ===');
-    const result = this.hasRole(4); // Rol 4 es admin
-    console.log('Resultado isAdmin:', result);
-    console.log('=== Fin isAdmin Debug ===');
-    return result;
+  // Verificar si es master (rol 1)
+  isMaster() {
+    return this.hasRole(1);
   }
 
-  // Mostrar/Ocultar links solo para id_rol = 4 - VERSIÓN CORREGIDA
-  toggleAdminLinks() {
-    console.log('=== INICIO toggleAdminLinks ===');
+  // Verificar si es administrador (rol 4)
+  isAdmin() {
+    return this.hasRole(4);
+  }
+
+  // Obtener información del rol actual
+  getCurrentRole() {
+    if (!this.user || !this.user.RoleInfo) {
+      return null;
+    }
+    return {
+      id: this.user.RoleInfo.id_rol,
+      name: this.user.RoleInfo.rol1 || this.user.RoleInfo.rol
+    };
+  }
+
+  // Mostrar/Ocultar elementos según el rol
+  toggleRoleBasedElements() {
+    console.log('=== INICIO toggleRoleBasedElements ===');
 
     // Verificar datos del usuario
     console.log('Usuario completo:', this.user);
     console.log('RoleInfo:', this.user?.RoleInfo);
     console.log('id_rol:', this.user?.RoleInfo?.id_rol);
 
-    // Verificar función isAdmin
-    const isRole4 = this.isAdmin();
-    console.log('Resultado isAdmin():', isRole4);
+    const currentRole = this.getCurrentRole();
+    console.log('Rol actual:', currentRole);
 
-    // Buscar elementos admin
-    const adminLinks = document.querySelectorAll('.admin-link');
-    console.log('Elementos encontrados con .admin-link:', adminLinks.length);
+    // Elementos para diferentes roles
+    this.toggleElementsByRole('admin-link', 4); // Elementos solo para admin
+    this.toggleElementsByRole('master-link', 1); // Elementos solo para master
+    this.toggleElementsByRole('user-link', [1, 2, 3, 4]); // Elementos para usuarios normales
 
-    adminLinks.forEach((el, index) => {
-      console.log(`--- Procesando elemento ${index} ---`);
-      console.log('Contenido:', el.textContent.trim());
-
-      if (isRole4) {
-        console.log('Usuario ES admin, mostrando enlace');
-
-        // MÉTODO 1: Usar display directo con !important
-        el.style.setProperty('display', 'list-item', 'important');
-
-        // MÉTODO 2: Agregar clase (como backup)
-        el.classList.add('show');
-
-        // MÉTODO 3: Remover el estilo que lo oculta
-        el.classList.remove('admin-link-hidden');
-
-        el.setAttribute('aria-hidden', 'false');
-
-        console.log('Enlace mostrado - Display:', window.getComputedStyle(el).display);
-        console.log('Clases:', el.className);
-
-      } else {
-        console.log('Usuario NO es admin, ocultando enlace');
-        el.style.setProperty('display', 'none', 'important');
-        el.classList.remove('show');
-        el.classList.add('admin-link-hidden');
-        el.setAttribute('aria-hidden', 'true');
-      }
-
-      console.log(`--- Fin elemento ${index} ---`);
-    });
-
-    // Add/remove 'user-admin' class to the body based on admin status
-    if (isRole4) {
-      document.body.classList.add('user-admin');
-      console.log('Agregada clase user-admin al body.');
-    } else {
-      document.body.classList.remove('user-admin');
-      console.log('Removida clase user-admin del body.');
+    // Agregar clase CSS al body según el rol
+    document.body.className = document.body.className.replace(/user-role-\d+/g, '');
+    if (currentRole) {
+      document.body.classList.add(`user-role-${currentRole.id}`);
     }
 
+    console.log('=== FIN toggleRoleBasedElements ===');
+  }
 
-    console.log('=== FIN toggleAdminLinks ===');
+  // Función auxiliar para mostrar/ocultar elementos por rol
+  toggleElementsByRole(className, allowedRoles) {
+    const elements = document.querySelectorAll(`.${className}`);
+    const userRole = this.user?.RoleInfo?.id_rol;
+    
+    // Convertir allowedRoles a array si no lo es
+    const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+    const shouldShow = roles.includes(userRole);
+
+    console.log(`Procesando .${className} - Rol usuario: ${userRole}, Roles permitidos:`, roles, 'Mostrar:', shouldShow);
+
+    elements.forEach((element, index) => {
+      console.log(`--- Procesando elemento .${className} ${index} ---`);
+      console.log('Contenido:', element.textContent.trim());
+
+      if (shouldShow) {
+        element.style.setProperty('display', 'list-item', 'important');
+        element.classList.add('show');
+        element.classList.remove('role-hidden');
+        element.setAttribute('aria-hidden', 'false');
+        console.log('Elemento mostrado');
+      } else {
+        element.style.setProperty('display', 'none', 'important');
+        element.classList.remove('show');
+        element.classList.add('role-hidden');
+        element.setAttribute('aria-hidden', 'true');
+        console.log('Elemento ocultado');
+      }
+    });
+  }
+
+  // Verificar si el usuario puede acceder a una página específica
+  canAccessPage(requiredRoles) {
+    const userRole = this.user?.RoleInfo?.id_rol;
+    const roles = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
+    return roles.includes(userRole);
+  }
+
+  // Redirigir si no tiene permisos para la página actual
+  checkPagePermissions(requiredRoles) {
+    if (!this.canAccessPage(requiredRoles)) {
+      console.warn('Usuario no tiene permisos para esta página');
+      // Redirigir a página de inicio o mostrar error
+      window.location.href = 'index.html';
+      return false;
+    }
+    return true;
   }
 }
 
-// Función global para cerrar sesión (compatible con tu código actual)
+// Función global para cerrar sesión (compatible con código existente)
 function handleLogout() {
   if (window.sessionManager) {
     window.sessionManager.logout();
@@ -309,39 +397,28 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Inicializando SessionManager...');
     window.sessionManager = new SessionManager();
 
-    // MÚLTIPLES INTENTOS para asegurar que se ejecute
+    // Intentos múltiples para asegurar que se ejecute la actualización de UI
     setTimeout(() => {
-      console.log('=== FORZANDO toggleAdminLinks (500ms) ===');
-      if (window.sessionManager) {
-        window.sessionManager.toggleAdminLinks();
+      console.log('=== FORZANDO actualización UI (500ms) ===');
+      if (window.sessionManager && window.sessionManager.user) {
+        window.sessionManager.toggleRoleBasedElements();
       }
     }, 500);
 
     setTimeout(() => {
-      console.log('=== FORZANDO toggleAdminLinks (1000ms) ===');
-      if (window.sessionManager) {
-        window.sessionManager.toggleAdminLinks();
+      console.log('=== FORZANDO actualización UI (1000ms) ===');
+      if (window.sessionManager && window.sessionManager.user) {
+        window.sessionManager.toggleRoleBasedElements();
       }
     }, 1000);
 
-    setTimeout(() => {
-      console.log('=== FORZANDO toggleAdminLinks (2000ms) ===');
-      if (window.sessionManager) {
-        window.sessionManager.toggleAdminLinks();
-      }
-    }, 2000);
-
-    // Hacer disponible globalmente para debugging
+    // Hacer disponibles funciones globalmente
     window.getCurrentUser = () => window.sessionManager.getCurrentUser();
     window.refreshUserData = () => window.sessionManager.refreshUserData();
-
-    // Función de debug manual
-    window.debugAdmin = () => {
-      console.log('=== DEBUG MANUAL ===');
-      if (window.sessionManager) {
-        window.sessionManager.toggleAdminLinks();
-      }
-    };
+    window.getCurrentRole = () => window.sessionManager.getCurrentRole();
+    
+  } else {
+    console.log('En página de login, no inicializando SessionManager');
   }
   console.log('=== FIN DOM CONTENT LOADED ===');
 });
@@ -356,29 +433,41 @@ window.getCurrentUserName = function() {
   return user ? user.name : null;
 };
 
-// Función para mostrar enlaces admin manualmente (para debugging)
-window.forceShowAdminLinks = function() {
-  console.log('=== FORZANDO MOSTRAR ENLACES ADMIN ===');
-  const adminLinks = document.querySelectorAll('.admin-link');
-  adminLinks.forEach(el => {
-    el.style.setProperty('display', 'list-item', 'important');
-    el.classList.add('show');
-    console.log('Enlace forzado a mostrar:', el.textContent.trim());
-  });
+window.isMaster = function() {
+  return window.sessionManager ? window.sessionManager.isMaster() : false;
 };
 
-// Función para debugging - mostrar información del usuario
+window.isAdmin = function() {
+  return window.sessionManager ? window.sessionManager.isAdmin() : false;
+};
+
+// Función para hacer login (usar en el formulario de login)
+window.doLogin = async function(email, password) {
+  if (!window.sessionManager) {
+    window.sessionManager = new SessionManager();
+  }
+  return await window.sessionManager.login(email, password);
+};
+
+// Funciones de debugging
 window.debugUserInfo = function() {
   console.log('=== INFO DEL USUARIO ===');
   if (window.sessionManager && window.sessionManager.user) {
     console.log('Usuario:', window.sessionManager.user);
+    console.log('Es Master:', window.sessionManager.isMaster());
     console.log('Es Admin:', window.sessionManager.isAdmin());
-    console.log('ID Rol:', window.sessionManager.user.RoleInfo?.id_rol);
-    console.log('Rol:', window.sessionManager.user.RoleInfo?.rol);
+    console.log('Rol actual:', window.sessionManager.getCurrentRole());
   } else {
     console.log('No hay usuario logueado');
   }
   console.log('=== FIN INFO USUARIO ===');
+};
+
+window.forceUpdateUI = function() {
+  console.log('=== FORZANDO ACTUALIZACIÓN UI ===');
+  if (window.sessionManager) {
+    window.sessionManager.updateUserInterface();
+  }
 };
 
 // Exportar para uso en módulos si es necesario
