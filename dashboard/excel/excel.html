@@ -1,0 +1,1117 @@
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Generador de Inventarios Excel</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <!-- ExcelJS para Excel con mejor formato -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+  <style>
+    :root {
+      --primary-green: #1AB192;
+      --primary-green-dark: #09A685;
+      --status-good: #28a745;
+      --status-bad: #dc3545;
+      --status-pending: #ffc107;
+    }
+    
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      background-color: var(--primary-green);
+      width: 220px;
+      min-height: 100vh;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding-top: 1.5rem;
+      position: sticky;
+      top: 0;
+    }
+    
+    .sidebar .sidebar-header {
+      padding: 0 1.5rem 1rem 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .sidebar .sidebar-nav ul {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 1.5rem;
+    }
+    
+    .sidebar .sidebar-nav ul li {
+      margin-bottom: 1rem;
+    }
+    
+    .sidebar .sidebar-nav ul li a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.4rem 1.5rem;
+      transition: background-color 0.3s;
+      border-radius: 0.375rem;
+    }
+    
+    .sidebar .sidebar-nav ul li a:hover,
+    .sidebar .sidebar-nav ul li a.active {
+      background-color: var(--primary-green-dark);
+      color: white;
+      text-decoration: none;
+    }
+    
+    /* Main Content */
+    .main-content {
+      flex-grow: 1;
+      padding: 2rem 3rem;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .main-header {
+      color: #222;
+    }
+    
+    .divider {
+      border-top: 2px solid #ddd;
+      margin: 20px 0;
+    }
+    
+    /* User Box */
+    .user-box {
+      display: flex;
+      align-items: center;
+      background-color: #f8f9fa;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      width: auto;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    .user-box:hover {
+      background-color: #e9ecef;
+    }
+    
+    .user-box img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid var(--primary-green);
+      margin-right: 0.75rem;
+    }
+    
+    .user-box span {
+      font-weight: 500;
+      color: #555;
+      margin-right: 0.5rem;
+    }
+    
+    /* Configuration Cards */
+    .config-card {
+      background-color: white;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 15px rgba(0,0,0,0.05);
+      border: 1px solid #e9ecef;
+    }
+    
+    .config-card h5 {
+      color: #495057;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .form-control:focus {
+      border-color: var(--primary-green);
+      box-shadow: 0 0 0 0.2rem rgba(26, 177, 146, 0.25);
+    }
+    
+    /* Buttons */
+    .btn-primary {
+      background-color: var(--primary-green);
+      border-color: var(--primary-green);
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-green-dark);
+      border-color: var(--primary-green-dark);
+    }
+    
+    .btn-success {
+      background-color: var(--status-good);
+      border-color: var(--status-good);
+    }
+    
+    .btn-info {
+      background-color: #17a2b8;
+      border-color: #17a2b8;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    
+    .action-buttons .btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.375rem;
+      transition: all 0.3s ease;
+    }
+    
+    .action-buttons .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Status Messages */
+    .status-message {
+      padding: 1rem;
+      border-radius: 0.375rem;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      display: none;
+    }
+    
+    .status-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .status-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .status-loading {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    
+    /* Preview Table */
+    .preview-container {
+      background-color: white;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 0 15px rgba(0,0,0,0.05);
+      border: 1px solid #e9ecef;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .preview-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    
+    .preview-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+      padding: 0.75rem;
+      border: 1px solid #dee2e6;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    
+    .preview-table td {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #dee2e6;
+      font-size: 0.875rem;
+    }
+    
+    .preview-table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+    
+    /* Loading Spinner */
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+    
+    .spinner-border {
+      color: var(--primary-green);
+    }
+    
+    /* Welcome Card */
+    .welcome-card {
+      background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+      color: white;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    
+    .welcome-card h3 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .welcome-card p {
+      opacity: 0.9;
+      margin-bottom: 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 1rem 1.5rem;
+      }
+      
+      .sidebar {
+        width: 60px;
+        padding-top: 1rem;
+      }
+      
+      .sidebar .sidebar-header,
+      .sidebar .sidebar-nav ul li a {
+        justify-content: center;
+        padding: 0.5rem;
+      }
+      
+      .sidebar .sidebar-nav ul li a span {
+        display: none;
+      }
+      
+      .user-box span {
+        display: none;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+      
+      .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header" title="Menú">
+        <i class="fas fa-file-excel"></i>
+        <span>Excel Export</span>
+      </div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="/login.html" class="active"><i class="fas fa-cubes"></i> Inventario</a></li>
+          <li><a href="/deshabilitados.html"><i class="fas fa-archive"></i> Desactivados</a></li>
+          <li><a href="/pendientes.html"><i class="fas fa-exclamation-circle"></i> Pendientes Check</a></li>
+          
+          <li><a href="/dashboard/excel/excel.html"><i class="fas fa-history"></i> Descargar tablas</a></li>
+          <li><a href="/dashboard.html"><i class="fas fa-shield-alt"></i> Panel administrativo</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header d-flex align-items-center justify-content-between flex-wrap">
+        <h1><i class="fas fa-file-excel me-2"></i>Generador de Inventarios Excel</h1>
+        <div class="user-box dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://via.placeholder.com/40x40/1AB192/FFFFFF?text=AL" alt="User Avatar" id="profileDropdown"/>
+          <span>Ann Lee</span>
+          <i class="fas fa-chevron-down ml-2"></i>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+            <li><a class="dropdown-item" href="login.html" onclick="handleLogout()">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </header>
+
+      <div class="divider"></div>
+
+      <!-- Status Message -->
+      <div id="statusMessage" class="status-message"></div>
+
+      <!-- Welcome Card -->
+      <div class="welcome-card">
+        <h3><i class="fas fa-download me-2"></i>Sistema de Exportación de Inventarios</h3>
+        <p>Genera reportes oficiales de inventarios en formato Excel siguiendo las especificaciones de UTTN</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button type="button" class="btn btn-info btn-lg" onclick="loadAndPreview()">
+          <i class="fas fa-search"></i>
+          Cargar y Previsualizar Datos
+        </button>
+        <button type="button" class="btn btn-success btn-lg" onclick="exportInventoryTools()">
+          <i class="fas fa-tools"></i>
+          Exportar Inventario de Herramientas
+        </button>
+        <button type="button" class="btn btn-primary btn-lg" onclick="exportInventoryEquipment()">
+          <i class="fas fa-laptop"></i>
+          Exportar Inventario de Equipos
+        </button>
+      </div>
+
+      <!-- Loading Spinner -->
+      <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <span class="ms-3">Cargando datos del servidor...</span>
+      </div>
+
+      <!-- Preview Section -->
+      <div id="previewSection" class="preview-container" style="display: none;">
+        <h5 class="mb-3">
+          <i class="fas fa-eye text-primary me-2"></i>Vista previa de datos
+        </h5>
+        <div id="previewContent"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+const API_BASE_URL = 'https://healtyapi.bsite.net';
+const CURRENT_USER = 'Ann Lee'; // En producción esto vendría de la sesión activa
+
+let inventoryData = [];
+let productUnitsData = [];
+
+function showStatus(message, type) {
+  const statusEl = document.getElementById('statusMessage');
+  statusEl.textContent = message;
+  statusEl.className = `status-message status-${type}`;
+  statusEl.style.display = 'block';
+  
+  if (type === 'success') {
+    setTimeout(() => {
+      statusEl.style.display = 'none';
+    }, 5000);
+  }
+}
+
+function showLoading(show) {
+  const spinner = document.getElementById('loadingSpinner');
+  spinner.style.display = show ? 'flex' : 'none';
+}
+
+async function fetchData() {
+  try {
+    showLoading(true);
+    showStatus('Cargando datos del servidor...', 'loading');
+    
+    const inventoryUrl = `${API_BASE_URL}/api/herramienta/excel`;
+    const productUnitsUrl = `${API_BASE_URL}/api/inv_workshop/excel`;
+    
+    // Realizar peticiones paralelas
+    const [inventoryResponse, productUnitsResponse] = await Promise.all([
+      fetch(inventoryUrl).catch(() => ({ ok: false })),
+      fetch(productUnitsUrl).catch(() => ({ ok: false }))
+    ]);
+    
+    if (inventoryResponse.ok) {
+      inventoryData = await inventoryResponse.json();
+    } else {
+      inventoryData = [];
+      console.warn('No se pudieron cargar los datos de inventarios');
+    }
+    
+    if (productUnitsResponse.ok) {
+      productUnitsData = await productUnitsResponse.json();
+    } else {
+      productUnitsData = [];
+      console.warn('No se pudieron cargar los datos de unidades de producto');
+    }
+    
+    showLoading(false);
+    showStatus(`✅ Datos cargados exitosamente: ${inventoryData.length} productos, ${productUnitsData.length} unidades`, 'success');
+    return true;
+    
+  } catch (error) {
+    showLoading(false);
+    showStatus(`❌ Error al cargar datos: ${error.message}`, 'error');
+    return false;
+  }
+}
+
+function loadAndPreview() {
+  fetchData().then(success => {
+    if (success) {
+      displayPreview();
+    }
+  });
+}
+
+function displayPreview() {
+  const previewSection = document.getElementById('previewSection');
+  const content = document.getElementById('previewContent');
+  
+  let html = '';
+  
+  if (inventoryData.length > 0) {
+    html += '<div class="mb-4">';
+    html += '<h6 class="text-success"><i class="fas fa-tools me-2"></i>Productos de Inventario (' + inventoryData.length + ' elementos)</h6>';
+    html += '<table class="preview-table table table-striped table-hover">';
+    html += '<thead><tr><th>ID</th><th>Nombre</th><th>Modelo</th><th>Descripción</th><th>Laboratorio</th><th>Categoría</th></tr></thead><tbody>';
+    
+    inventoryData.slice(0, 10).forEach(item => {
+      const categoryName = item.Categoria || 'N/A';
+      const labName = item.Laboratorio || item.Taller || 'N/A';
+      html += `<tr>
+        <td>${item.Numero_item || 'N/A'}</td>
+        <td><strong>${item.nombre || 'N/A'}</strong></td>
+        <td>N/A</td>
+        <td>${item.descripcion || 'N/A'}</td>
+        <td>${labName}</td>
+        <td><span class="badge bg-secondary">${categoryName}</span></td>
+      </tr>`;
+    });
+    
+    if (inventoryData.length > 10) {
+      html += `<tr><td colspan="6" class="text-center text-muted"><em>... y ${inventoryData.length - 10} elementos más</em></td></tr>`;
+    }
+    html += '</tbody></table></div>';
+  }
+  
+  if (productUnitsData.length > 0) {
+    html += '<div>';
+    html += '<h6 class="text-primary"><i class="fas fa-laptop me-2"></i>Unidades de Producto (' + productUnitsData.length + ' elementos)</h6>';
+    html += '<table class="preview-table table table-striped table-hover">';
+    html += '<thead><tr><th>ID</th><th>Serie</th><th>Código Interno</th><th>Producto</th><th>Estado</th><th>Ubicación</th><th>Laboratorio</th></tr></thead><tbody>';
+    
+    productUnitsData.slice(0, 10).forEach(item => {
+      const productName = item.p_name || 'N/A';
+      const locationName = item.Ubicacion || 'N/A';
+      const labName = item.Laboratorio || item.taller || 'N/A';
+      const status = item.Status || 'N/A';
+      const internalCode = item.inv_code || 'N/A';
+      
+      let statusClass = 'bg-secondary';
+      if (status.toLowerCase().includes('buena') || status.toLowerCase().includes('activo')) {
+        statusClass = 'bg-success';
+      } else if (status.toLowerCase().includes('mala') || status.toLowerCase().includes('dañad')) {
+        statusClass = 'bg-danger';
+      } else if (status.toLowerCase().includes('pendiente')) {
+        statusClass = 'bg-warning text-dark';
+      }
+      
+      html += `<tr>
+        <td>${item.id_pruduct || 'N/A'}</td>
+        <td><code>${item.serial_n || 'N/A'}</code></td>
+        <td><code>${internalCode}</code></td>
+        <td><strong>${productName}</strong></td>
+        <td><span class="badge ${statusClass}">${status}</span></td>
+        <td>${locationName}</td>
+        <td>${labName}</td>
+      </tr>`;
+    });
+    
+    if (productUnitsData.length > 10) {
+      html += `<tr><td colspan="7" class="text-center text-muted"><em>... y ${productUnitsData.length - 10} elementos más</em></td></tr>`;
+    }
+    html += '</tbody></table></div>';
+  }
+  
+  if (html === '') {
+    html = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>No se encontraron datos para mostrar.</div>';
+  }
+  
+  content.innerHTML = html;
+  previewSection.style.display = 'block';
+}
+
+async function exportInventoryTools() {
+  if (inventoryData.length === 0) {
+    showStatus('❌ Primero carga los datos usando "Cargar y Previsualizar Datos"', 'error');
+    return;
+  }
+  
+  showStatus('🔄 Cargando plantilla Excel y generando archivo...', 'loading');
+  
+  try {
+    const fechaElaboracion = new Date().toLocaleDateString('es-MX');
+    const fechaActualizacion = new Date().toLocaleDateString('es-MX');
+    const numeroInventario = `INV-HMI-${new Date().getFullYear()}`;
+    
+    // Cargar plantilla Excel existente
+    let workbook;
+    let worksheet;
+    
+    try {
+      console.log('Intentando cargar plantilla maqe.xlsx...');
+      const templateResponse = await fetch('/dashboard/excel/maqe.xlsx');
+      
+      if (!templateResponse.ok) {
+        throw new Error(`HTTP ${templateResponse.status}: ${templateResponse.statusText}`);
+      }
+      
+      const templateBuffer = await templateResponse.arrayBuffer();
+      console.log('Plantilla cargada, creando workbook...');
+      
+      // Crear workbook desde la plantilla
+      workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(templateBuffer);
+      
+      // Obtener la primera hoja de trabajo
+      worksheet = workbook.getWorksheet(1);
+      if (!worksheet) {
+        throw new Error('No se encontró hoja de trabajo en la plantilla');
+      }
+      
+      console.log('Plantilla cargada exitosamente');
+      
+    } catch (templateError) {
+      console.error('Error cargando plantilla:', templateError);
+      console.warn('No se pudo cargar plantilla, creando desde cero');
+      
+      // Fallback: crear workbook desde cero
+      workbook = new ExcelJS.Workbook();
+      worksheet = workbook.addWorksheet('Inventario Herramientas');
+    }
+    
+    // Actualizar metadatos del documento
+    workbook.creator = 'Sistema UTTN';
+    workbook.lastModifiedBy = CURRENT_USER;
+    workbook.modified = new Date();
+    
+    // Combinar celdas A1:B2 para el logo (vacías para la imagen flotante)
+    try {
+      worksheet.mergeCells('A1:B2');
+    } catch (e) {
+      // Ya está combinado
+    }
+    const logoCell = worksheet.getCell('A1');
+    logoCell.value = null; // Vacío para la imagen flotante
+    logoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+    logoCell.border = {
+      top: { style: 'thin', color: { argb: 'FF1AB192' } },
+      left: { style: 'thin', color: { argb: 'FF1AB192' } },
+      bottom: { style: 'thin', color: { argb: 'FF1AB192' } },
+      right: { style: 'thin', color: { argb: 'FF1AB192' } }
+    };
+    
+    // Ajustar altura de las filas del logo
+    worksheet.getRow(1).height = 30;
+    worksheet.getRow(2).height = 30;
+    
+    // Insertar imagen del logo como flotante
+    try {
+      // Cargar la imagen del logo
+      const logoResponse = await fetch('/img/logoescuela.png');
+      if (logoResponse.ok) {
+        const logoBuffer = await logoResponse.arrayBuffer();
+        const logoImageId = workbook.addImage({
+          buffer: logoBuffer,
+          extension: 'png',
+        });
+        
+        // Insertar imagen flotante en la posición del logo
+        worksheet.addImage(logoImageId, {
+          tl: { col: 0, row: 0 }, // Top-left: A1
+          br: { col: 2, row: 2 }, // Bottom-right: C3
+          editAs: 'oneCell'
+        });
+        console.log('Logo insertado exitosamente');
+      } else {
+        console.warn('No se pudo cargar el logo, continuando sin imagen');
+      }
+    } catch (logoError) {
+      console.warn('Error cargando logo:', logoError);
+    }
+    
+    // Usuario en celdas combinadas B4:D4 - Alineado a la izquierda
+    try {
+      worksheet.mergeCells('B4:D4');
+    } catch (e) {
+      // Ya está combinado
+    }
+    const elaboradoCell = worksheet.getCell('C4');
+    elaboradoCell.value = CURRENT_USER;
+    elaboradoCell.font = { name: 'Arial', size: 10, bold: true };
+    elaboradoCell.alignment = { horizontal: 'left', vertical: 'middle' };
+    elaboradoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8F9FA' } };
+    elaboradoCell.border = {
+      top: { style: 'thin', color: { argb: 'FF000000' } },
+      bottom: { style: 'thin', color: { argb: 'FF000000' } },
+      left: { style: 'thin', color: { argb: 'FF000000' } },
+      right: { style: 'thin', color: { argb: 'FF000000' } }
+    };
+    
+    // "FECHA DE ELABORACION" en celdas combinadas E4:F4 (alineado a la derecha)
+    try {
+      worksheet.mergeCells('E4:F4');
+    } catch (e) {
+      // Ya está combinado
+    }
+    const fechaElabLabelCell = worksheet.getCell('E4');
+    fechaElabLabelCell.value = 'FECHA DE ELABORACION';
+    fechaElabLabelCell.font = { name: 'Arial', size: 6, bold: true };
+    fechaElabLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+    
+    // Fecha de elaboración en G4
+    const fechaElabValueCell = worksheet.getCell('G4');
+    fechaElabValueCell.value = fechaElaboracion;
+    fechaElabValueCell.font = { name: 'Arial', size: 6 };
+    fechaElabValueCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    // "FECHA DE ULTIMA ACTUALIZACION" en celdas combinadas H4:I4
+    try {
+      worksheet.mergeCells('H4:I4');
+    } catch (e) {
+      // Ya está combinado
+    }
+    const fechaActLabelCell = worksheet.getCell('H4');
+    fechaActLabelCell.value = 'FECHA DE ULTIMA ACTUALIZACION';
+    fechaActLabelCell.font = { name: 'Arial', size: 6, bold: true };
+    fechaActLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+    
+    // Fecha de actualización en J4
+    const fechaActValueCell = worksheet.getCell('J4');
+    fechaActValueCell.value = fechaActualizacion;
+    fechaActValueCell.font = { name: 'Arial', size: 6 };
+    fechaActValueCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    // "N.DE" en K4
+    const numInvLabelCell = worksheet.getCell('K4');
+    numInvLabelCell.value = 'N.DE';
+    numInvLabelCell.font = { name: 'Arial', size: 6, bold: true };
+    numInvLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+    
+    // Número de inventario en L4
+    const numInvValueCell = worksheet.getCell('L4');
+    numInvValueCell.value = numeroInventario;
+    numInvValueCell.font = { name: 'Arial', size: 6 };
+    numInvValueCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    // Encontrar la fila donde empiezan los datos (buscar encabezados)
+    let dataStartRow = 7; // Valor por defecto
+    let headersFound = false;
+    
+    worksheet.eachRow((row, rowNumber) => {
+      if (!headersFound && rowNumber > 5) {
+        row.eachCell((cell) => {
+          if (cell.value && typeof cell.value === 'string') {
+            const cellText = cell.value.toLowerCase();
+            if (cellText.includes('item') || cellText.includes('nombre') || cellText.includes('descripcion')) {
+              dataStartRow = rowNumber + 1;
+              headersFound = true;
+              return;
+            }
+          }
+        });
+      }
+    });
+    
+    console.log(`Datos empezarán en fila: ${dataStartRow}`);
+    
+    // Limpiar datos existentes manteniendo formato
+    const maxRows = Math.max(worksheet.rowCount, dataStartRow + inventoryData.length + 5);
+    for (let i = dataStartRow; i <= maxRows; i++) {
+      const row = worksheet.getRow(i);
+      row.eachCell((cell, colNumber) => {
+        if (colNumber <= 11) { // Solo limpiar las columnas de datos
+          const currentFill = cell.fill;
+          const currentBorder = cell.border;
+          const currentFont = cell.font;
+          const currentAlignment = cell.alignment;
+          
+          cell.value = null;
+          
+          // Restaurar formato si existía
+          if (currentFill && currentFill.type) cell.fill = currentFill;
+          if (currentBorder) cell.border = currentBorder;
+          if (currentFont) cell.font = currentFont;
+          if (currentAlignment) cell.alignment = currentAlignment;
+        }
+      });
+    }
+    
+    // Configurar anchos de columna - Aumentar ancho de columna A
+    const columnWidths = [10, 12, 8, 12, 15, 10, 8, 12, 10, 12, 12, 12];
+    columnWidths.forEach((width, index) => {
+      worksheet.getColumn(index + 1).width = width;
+    });
+    
+    // Insertar nuevos datos con formato específico (font 6, center aligned)
+    inventoryData.forEach((item, index) => {
+      const currentRow = dataStartRow + index;
+      const dataRow = worksheet.getRow(currentRow);
+      
+      const tipo = item.Categoria || 'Material';
+      const marca = item.Marca || 'N/A';
+      const laboratorio = item.Laboratorio || item.Taller || 'Laboratorio General';
+      
+      const rowData = [
+        item.Numero_item || (index + 1),
+        laboratorio,
+        tipo,
+        item.nombre || 'N/A',
+        item.descripcion || 'N/A',
+        marca,
+        item.inv_codigo || 'N/A',
+        'N/A', // No internal code in tools data
+        item.cantidad || '1',
+        item.especificaciones || 'N/A',
+        item.foto || 'N/A',
+        item.observaciones || 'N/A'
+      ];
+      
+      rowData.forEach((value, colIndex) => {
+        const cell = dataRow.getCell(colIndex + 1);
+        cell.value = value;
+        
+        // Aplicar formato específico: font 6, center aligned, with text wrapping
+        cell.font = { name: 'Arial', size: 6 };
+        cell.alignment = { 
+          horizontal: 'center', 
+          vertical: 'middle',
+          wrapText: true 
+        };
+      });
+      
+      // Fixed height for data rows
+      dataRow.height = 15;
+    });
+    
+    console.log('Datos insertados, generando archivo...');
+    
+    // Generar y descargar archivo
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Inventario_Herramientas_Desde_Plantilla_${new Date().toISOString().split('T')[0]}.xlsx`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    
+    showStatus(`✅ Excel generado desde plantilla con ${inventoryData.length} elementos`, 'success');
+    
+  } catch (error) {
+    console.error('Error generando Excel:', error);
+    showStatus(`❌ Error al generar Excel: ${error.message}`, 'error');
+  }
+}
+
+async function exportInventoryEquipment() {
+  if (productUnitsData.length === 0) {
+    showStatus('❌ Primero carga los datos usando "Cargar y Previsualizar Datos"', 'error');
+    return;
+  }
+  
+  showStatus('🔄 Generando archivo Excel de equipos con formato específico...', 'loading');
+  
+
+  try {
+    const fechaElaboracion = new Date().toLocaleDateString('es-MX');
+    const fechaActualizacion = new Date().toLocaleDateString('es-MX');
+    const numeroInventario = `INV-TL-${new Date().getFullYear()}`;
+    
+    let workbook;
+    let worksheet;
+    // Crear workbook con ExcelJ
+     try {
+      console.log('Intentando cargar plantilla maqe.xlsx...');
+      const templateResponse = await fetch('/dashboard/excel/maqes.xlsx');
+      
+      if (!templateResponse.ok) {
+        throw new Error(`HTTP ${templateResponse.status}: ${templateResponse.statusText}`);
+      }
+      
+      const templateBuffer = await templateResponse.arrayBuffer();
+      console.log('Plantilla cargada, creando workbook...');
+      
+      // Crear workbook desde la plantilla
+      workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(templateBuffer);
+      
+      // Obtener la primera hoja de trabajo
+      worksheet = workbook.getWorksheet(1);
+      if (!worksheet) {
+        throw new Error('No se encontró hoja de trabajo en la plantilla');
+      }
+      
+      console.log('Plantilla cargada exitosamente');
+      
+    } catch (templateError) {
+      console.error('Error cargando plantilla:', templateError);
+      console.warn('No se pudo cargar plantilla, creando desde cero');
+      
+      // Fallback: crear workbook desde cero
+      workbook = new ExcelJS.Workbook();
+      worksheet = workbook.addWorksheet('Inventario Herramientas');
+    }
+    
+    try {
+      worksheet.mergeCells('A1:B2');
+    } catch (e) {
+      // Ya está combinado
+    }
+    const logoCell = worksheet.getCell('A1');
+    logoCell.value = null; // Vacío para la imagen flotante
+    logoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+    logoCell.border = {
+      top: { style: 'thin', color: { argb: 'FF1AB192' } },
+      left: { style: 'thin', color: { argb: 'FF1AB192' } },
+      bottom: { style: 'thin', color: { argb: 'FF1AB192' } },
+      right: { style: 'thin', color: { argb: 'FF1AB192' } }
+    };
+    
+    worksheet.getRow(1).height = 30;
+    worksheet.getRow(2).height = 30;
+    
+    // Insertar imagen del logo como flotante
+   try {
+      // Cargar la imagen del logo
+      const logoResponse = await fetch('/img/logoescuela.png');
+      if (logoResponse.ok) {
+        const logoBuffer = await logoResponse.arrayBuffer();
+        const logoImageId = workbook.addImage({
+          buffer: logoBuffer,
+          extension: 'png',
+        });
+        
+        // Insertar imagen flotante en la posición del logo
+        worksheet.addImage(logoImageId, {
+          tl: { col: 0, row: 0 }, // Top-left: A1
+          br: { col: 2, row: 2 }, // Bottom-right: C3
+          editAs: 'oneCell'
+        });
+        console.log('Logo insertado exitosamente');
+      } else {
+        console.warn('No se pudo cargar el logo, continuando sin imagen');
+      }
+    } catch (logoError) {
+      console.warn('Error cargando logo:', logoError);
+    }
+
+    const elaboradoCell = worksheet.getCell('C4');
+    elaboradoCell.value = CURRENT_USER;
+    elaboradoCell.font = { name: 'Arial', size: 10, bold: true };
+    elaboradoCell.alignment = { horizontal: 'left', vertical: 'middle' };
+    elaboradoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8F9FA' } };
+    elaboradoCell.border = {
+      top: { style: 'thin', color: { argb: 'FF000000' } },
+      bottom: { style: 'thin', color: { argb: 'FF000000' } },
+      left: { style: 'thin', color: { argb: 'FF000000' } },
+      right: { style: 'thin', color: { argb: 'FF000000' } }
+    };
+
+     try {
+      worksheet.mergeCells('E4:F4');
+    } catch (e) {
+      // Ya está combinado
+    }
+    // "FECHA DE ELABORACION" en celdas combinadas E4:F4 (alineado a la derecha)
+   const fechaElabLabelCell = worksheet.getCell('E4');
+    fechaElabLabelCell.value = 'FECHA DE ELABORACION';
+    fechaElabLabelCell.font = { name: 'Arial', size: 6, bold: true };
+    fechaElabLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+    
+    // Fecha de elaboración en G4
+    const fechaElabValueCell = worksheet.getCell('G4');
+    fechaElabValueCell.value = fechaElaboracion;
+    fechaElabValueCell.font = { name: 'Arial', size: 6 };
+    fechaElabValueCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    // "FECHA DE ULTIMA ACTUALIZACION" en celdas combinadas H4:I4
+    try {
+      worksheet.mergeCells('H4:I4');
+    } catch (e) {
+      // Ya está combinado
+    }
+    const fechaActLabelCell = worksheet.getCell('H4');
+    fechaActLabelCell.value = 'FECHA DE ULTIMA ACTUALIZACION';
+    fechaActLabelCell.font = { name: 'Arial', size: 6, bold: true };
+    fechaActLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+    
+    // Fecha de actualización en J4
+    const fechaActValueCell = worksheet.getCell('J4');
+    fechaActValueCell.value = fechaActualizacion;
+    fechaActValueCell.font = { name: 'Arial', size: 6 };
+    fechaActValueCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    // "N.DE" en K4
+    const numInvLabelCell = worksheet.getCell('K4');
+    numInvLabelCell.value = 'N.DE';
+    numInvLabelCell.font = { name: 'Arial', size: 6, bold: true };
+    numInvLabelCell.alignment = { horizontal: 'right', vertical: 'middle' };
+    
+    // Número de inventario en L4
+    const numInvValueCell = worksheet.getCell('L4');
+    numInvValueCell.value = numeroInventario;
+    numInvValueCell.font = { name: 'Arial', size: 6 };
+    numInvValueCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    let dataStartRow = 7; // Valor por defecto
+    let headersFound = false;
+    
+    worksheet.eachRow((row, rowNumber) => {
+      if (!headersFound && rowNumber > 5) {
+        row.eachCell((cell) => {
+          if (cell.value && typeof cell.value === 'string') {
+            const cellText = cell.value.toLowerCase();
+            if (cellText.includes('item') || cellText.includes('nombre') || cellText.includes('descripcion')) {
+              dataStartRow = rowNumber + 1;
+              headersFound = true;
+              return;
+            }
+          }
+        });
+      }
+    });
+     console.log(`Datos empezarán en fila: ${dataStartRow}`);
+
+       // Limpiar datos existentes manteniendo formato
+    const maxRows = Math.max(worksheet.rowCount, dataStartRow + inventoryData.length + 5);
+    for (let i = dataStartRow; i <= maxRows; i++) {
+      const row = worksheet.getRow(i);
+      row.eachCell((cell, colNumber) => {
+        if (colNumber <= 11) { // Solo limpiar las columnas de datos
+          const currentFill = cell.fill;
+          const currentBorder = cell.border;
+          const currentFont = cell.font;
+          const currentAlignment = cell.alignment;
+          
+          cell.value = null;
+          
+          // Restaurar formato si existía
+          if (currentFill && currentFill.type) cell.fill = currentFill;
+          if (currentBorder) cell.border = currentBorder;
+          if (currentFont) cell.font = currentFont;
+          if (currentAlignment) cell.alignment = currentAlignment;
+        }
+      });
+    }
+
+    // Configurar anchos de columna - Aumentar ancho de columna A
+    const columnWidths = [8, 10, 8, 15, 10, 8, 13, 9, 10, 12, 9, 12];
+    columnWidths.forEach((width, index) => {
+      worksheet.getColumn(index + 1).width = width;
+    });
+    // Encabezados de la tabla en fila 5
+
+
+    let itemNumber = 1;
+    
+    productUnitsData.forEach((unit, index) => {
+      const currentRow = dataStartRow + index;
+      const dataRow = worksheet.getRow(currentRow);
+      
+      const productName = unit.p_name || 'Equipo sin nombre';
+      const productModel = unit.model || 'N/A';
+      const productSpecs = unit.specs || 'N/A';
+      const productId = unit.id_pruduct || 'N/A';
+      const locationName = unit.Ubicacion || 'N/A';
+      const labName = unit.Laboratorio || unit.taller || 'Laboratorio General';
+      const marca = unit.marca || 'N/A';
+      const internalCode = unit.inv_code || 'N/A';
+      
+      const rowData = [
+        itemNumber++,
+        labName,
+        productName,
+        unit.quantyty || '1',
+        productModel,
+        marca,
+        productId,
+        unit.serial_n || 'N/A',
+        internalCode,
+        productSpecs,
+        locationName,
+        unit.observations || 'N/A'
+      ];
+      
+      rowData.forEach((value, colIndex) => {
+        const cell = dataRow.getCell(colIndex + 1);
+        cell.value = value;
+        
+        // Aplicar formato específico: font 6, center aligned, with text wrapping
+        cell.font = { name: 'Arial', size: 6 };
+        cell.alignment = { 
+          horizontal: 'center', 
+          vertical: 'middle',
+          wrapText: true 
+        };
+      });
+      // Fixed height for data rows
+      dataRow.height = 15;
+      });
+    
+    
+    // Generar y descargar archivo
+   // Generar y descargar archivo
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Inventario_Laboratrorios_Desde_Plantilla_${new Date().toISOString().split('T')[0]}.xlsx`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    
+    showStatus(`✅ Excel generado desde plantilla con ${productUnitsData.length} elementos`, 'success');
+    
+    
+  } catch (error) {
+    console.error('Error generando Excel:', error);
+    showStatus(`❌ Error al generar Excel: ${error.message}`, 'error');
+  } 
+}
+
+
+function handleLogout() {
+  console.log('Cerrando sesión...');
+}
+
+// Auto-cargar datos al iniciar
+document.addEventListener('DOMContentLoaded', function() {
+  // Comentar la siguiente línea para cargar automáticamente al inicio
+  // loadAndPreview();
+});
+  </script>
+</body>
+</html>
