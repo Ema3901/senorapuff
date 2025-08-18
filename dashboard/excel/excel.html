@@ -584,7 +584,7 @@ async function exportInventoryTools() {
     
     try {
       console.log('Intentando cargar plantilla maqe.xlsx...');
-      const templateResponse = await fetch('/dashboard/excel/maqe.xlsx');
+      const templateResponse = await fetch('');
       
       if (!templateResponse.ok) {
         throw new Error(`HTTP ${templateResponse.status}: ${templateResponse.statusText}`);
