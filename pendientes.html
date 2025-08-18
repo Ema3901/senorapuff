@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pendientes por Check</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+  <link href="css/index.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        Inventario
+      </div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="index.html"><i class="fas fa-cubes"></i> Inventario</a></li>
+          <li><a href="deshabilitados.html"><i class="fas fa-archive"></i> Desactivados</a></li>
+          <li><a href="pendientes.html" class="active"><i class="fas fa-exclamation-circle"></i> Pendientes Check</a></li>
+          <li><a href="dashboard.html"><i class="fas fa-shield-alt"></i> Panel administrativo</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header d-flex align-items-center justify-content-between flex-wrap">
+        <h1>Pendientes por Revisar</h1>
+        <div class="user-box dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="img/stock.jpg" alt="User Avatar" id="profileDropdown"/>
+          <span>Ann Lee</span>
+          <i class="fas fa-chevron-down ml-2"></i>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+            <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </header>
+
+      <div class="divider"></div>
+
+      <!-- Contador de productos pendientes -->
+      <div id="contadorPendientes" class="alert alert-info d-flex align-items-center mb-3">
+        <i class="fas fa-tasks me-2"></i>
+        <span id="textoPendientes"><strong>Productos pendientes por revisar: <span id="numeroPendientes">0</span></strong></span>
+      </div>
+
+      <!-- Botón para aprobar todos -->
+      <div class="mb-3">
+        <button class="btn btn-success" id="aprobarTodosBtn">
+          <i class="fas fa-check-double me-2"></i>Aprobar Todos los Checks
+        </button>
+      </div>
+
+      <!-- Tabla de pendientes -->
+      <div id="tablaPendientes" class="table-container">
+        <table id="pendientesTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" aria-label="Seleccionar todo" /></th>
+              <th>Número de item</th>
+              <th>Nombre del taller o laboratorio</th>
+              <th>Clase</th>
+              <th>Nombre del equipo</th>
+              <th>Cantidad en existencia</th>
+              <th>Ubicación del equipo</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="pendientesTableBody">
+            <!-- Las filas se generarán dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mensaje de finalización -->
+      <div id="mensajeFinal" class="text-center py-5" style="display: none;">
+        <i class="fas fa-check-circle mb-3" style="font-size: 3rem; color: #198754;"></i>
+        <h2 class="text-success">Todos los pendientes han sido revisados,<br>la próxima revisión es en <span id="proximaRevision"></span></h2>
+        <a href="index.html" class="btn btn-outline-primary mt-4">
+          <i class="fas fa-arrow-left"></i> Regresar al inventario
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+
+  <script>
+    // Variable global para almacenar los datos del inventario
+    let pendientesData = [];
+    let contadorPendientes = 0;
+
+    // Función para obtener el mes de la próxima revisión
+    function getProximaRevision() {
+        const mesActual = new Date().getMonth() + 1; // getMonth() devuelve 0-11
+        return mesActual <= 6 ? 'Diciembre' : 'Julio';
+    }
+
+    // Función para cargar datos de la API
+    async function loadPendientesData() {
+        try {
+            const response = await fetch('https://healtyapi.bsite.net/api/InventarioCombinado/Excel');
+            const data = await response.json();
+            
+            // Filtrar solo los productos que están activos y tienen check pendiente
+            const filteredData = data.filter(item => 
+                item.Status === "Activado" && item.Check === "Pendiente"
+            );
+            
+            // Mapear los datos filtrados
+            pendientesData = filteredData.map(item => ({
+                numeroItem: item.NumeroDeItem || 'N/A',
+                nombreTaller: item.NombreDeTallerOLaboratorio || 'N/A',
+                clase: item.MaterialHerramientaOInsumo || 'N/A',
+                nombreEquipo: item.Nombre || 'Sin nombre',
+                cantidadExistencia: item.CantidadEnExistencia || 0,
+                ubicacionEquipo: item.Ubicacion || 'N/A',
+                descripcion: item.Descripcion || 'Sin descripción',
+                marca: item.Marca || 'N/A',
+                fabricante: item.Fabricante || 'N/A',
+                modelo: item.Modelo || 'N/A',
+                numeroSerie: item.NumeroSerie || 'N/A',
+                codigoInventario: item.CodigoDeInventario || 'N/A',
+                especificacionesTecnicas: item.EspecificacionesTecnicas || 'No especificadas',
+                fotografia: item.Fotografia || null,
+                observaciones: item.Observaciones || 'Sin observaciones',
+                check: item.Check
+            }));
+
+            contadorPendientes = pendientesData.length;
+            actualizarContador();
+            generateTableRows();
+            
+        } catch (error) {
+            console.error('Error cargando datos de pendientes:', error);
+        }
+    }
+
+    // Función para actualizar el contador
+    function actualizarContador() {
+        const numeroPendientesElement = document.getElementById('numeroPendientes');
+        const contadorElement = document.getElementById('contadorPendientes');
+        const mensajeFinalElement = document.getElementById('mensajeFinal');
+        const tablaElement = document.getElementById('tablaPendientes');
+        const aprobarTodosBtn = document.getElementById('aprobarTodosBtn');
+        
+        numeroPendientesElement.textContent = contadorPendientes;
+        
+        if (contadorPendientes === 0) {
+            contadorElement.style.display = 'none';
+            tablaElement.style.display = 'none';
+            aprobarTodosBtn.style.display = 'none';
+            mensajeFinalElement.style.display = 'block';
+            document.getElementById('proximaRevision').textContent = getProximaRevision();
+        } else {
+            contadorElement.style.display = 'flex';
+            tablaElement.style.display = 'block';
+            aprobarTodosBtn.style.display = 'inline-block';
+            mensajeFinalElement.style.display = 'none';
+        }
+    }
+
+    // Función para generar las filas de la tabla
+    function generateTableRows() {
+        const tbody = document.getElementById('pendientesTableBody');
+        tbody.innerHTML = '';
+
+        pendientesData.forEach((item, index) => {
+            // Fila principal
+            const mainRow = document.createElement('tr');
+            mainRow.className = 'main-row';
+            mainRow.innerHTML = `
+                <td><input type="checkbox" data-index="${index}" /></td>
+                <td>
+                    <i class="fas fa-chevron-right expand-icon" data-index="${index}"></i>
+                    ${item.numeroItem}
+                </td>
+                <td>${item.nombreTaller}</td>
+                <td>${item.clase}</td>
+                <td>${item.nombreEquipo}</td>
+                <td>${item.cantidadExistencia}</td>
+                <td>${item.ubicacionEquipo}</td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-secondary btn-sm" onclick="editarItem(${index})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="aprobarItem(${index})" title="Aprobar">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+
+            // Fila expandida
+            const expandedRow = document.createElement('tr');
+            expandedRow.className = 'expanded-content';
+            expandedRow.id = `expanded-${index}`;
+            expandedRow.innerHTML = `
+                <td colspan="8">
+                    <div class="expanded-details">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Descripción:</div>
+                                <div class="detail-value">${item.descripcion}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Marca:</div>
+                                <div class="detail-value">${item.marca}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Fabricante:</div>
+                                <div class="detail-value">${item.fabricante}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Modelo:</div>
+                                <div class="detail-value">${item.modelo}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Número de serie:</div>
+                                <div class="detail-value">${item.numeroSerie}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Código de inventario:</div>
+                                <div class="detail-value">${item.codigoInventario}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Especificaciones técnicas:</div>
+                                <div class="detail-value">${item.especificacionesTecnicas}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Observaciones:</div>
+                                <div class="detail-value">${item.observaciones}</div>
+                            </div>
+                        </div>
+                        <div class="image-container">
+                            ${item.fotografia ? `<img src="${item.fotografia}" alt="${item.nombreEquipo}" class="equipment-image" />` : ''}
+                        </div>
+                    </div>
+                </td>
+            `;
+
+            tbody.appendChild(mainRow);
+            tbody.appendChild(expandedRow);
+        });
+    }
+
+    // Función para manejar la expansión/contracción
+    function toggleExpansion(index) {
+        const expandedRow = document.getElementById(`expanded-${index}`);
+        const icon = document.querySelector(`[data-index="${index}"].expand-icon`);
+        
+        if (expandedRow && icon) {
+            if (expandedRow.classList.contains('show')) {
+                expandedRow.classList.remove('show');
+                icon.classList.remove('expanded');
+            } else {
+                expandedRow.classList.add('show');
+                icon.classList.add('expanded');
+            }
+        }
+    }
+
+    // Función para editar un item
+    function editarItem(index) {
+        // Redirigir a la página de edición con el ID del producto
+        const item = pendientesData[index];
+        window.location.href = `producto.html?id=${item.numeroItem}&edit=true`;
+    }
+
+    // Función para aprobar un item individual
+    function aprobarItem(index) {
+        const confirmacion = confirm('¿Está seguro de que desea aprobar este check?');
+        if (confirmacion) {
+            // Remover el item de la lista de pendientes
+            pendientesData.splice(index, 1);
+            contadorPendientes--;
+            actualizarContador();
+            generateTableRows();
+        }
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cargar datos al inicializar la página
+        loadPendientesData();
+        
+        // Event listener para expandir filas
+        document.addEventListener('click', function(e) {
+            // No expandir si se hace clic en checkbox o botón
+            if (e.target.type === 'checkbox' || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                return;
+            }
+            
+            const row = e.target.closest('.main-row');
+            if (row) {
+                const expandIcon = row.querySelector('.expand-icon');
+                if (expandIcon) {
+                    const index = parseInt(expandIcon.dataset.index);
+                    toggleExpansion(index);
+                }
+            }
+        });
+
+        // Event listener para aprobar todos
+        document.getElementById('aprobarTodosBtn').addEventListener('click', function() {
+            const confirmacion = confirm(`¿Está seguro de que desea aprobar TODOS los ${contadorPendientes} checks pendientes?`);
+            if (confirmacion) {
+                pendientesData = [];
+                contadorPendientes = 0;
+                actualizarContador();
+                generateTableRows();
+            }
+        });
+
+        // Event listener para seleccionar todo
+        document.querySelector('input[aria-label="Seleccionar todo"]').addEventListener('change', function(e) {
+            const checkboxes = document.querySelectorAll('#pendientesTableBody input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+        });
+    });
+  </script>
+</body>
+</html>

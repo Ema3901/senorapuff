@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editar unidades - Inventario Dashboard</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+  <link href="css/editar-producto.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header" title="Menú">
+        Inventario
+      </div>
+      <nav class="sidebar-nav" >
+        <ul>
+          <li><a href="index.html" class="active"><i class="fas fa-cubes"></i> Inventario</a></li>
+          <li><a href="deshabilitados.html"><i class="fas fa-archive"></i> Desactivados</a></li>
+          <li><a href="pendientes.html"><i class="fas fa-exclamation-circle"></i> Pendientes Check</a></li>
+          
+          
+          <!-- Estos dos solo serán visibles para los administradores con id_rol = 4 -->
+          
+          <li ><a href="dashboard.html"><i class="fas fa-shield-alt"></i> Panel administrativo</a></li>
+        </ul>
+      </nav>
+    </aside>
+    <main class="main-content">
+      <header class="main-header d-flex align-items-center justify-content-between flex-wrap">
+        <!-- Título -->
+        <div class="d-flex align-items-center">
+          <button class="btn btn-outline-secondary me-3" onclick="window.location.href='index.html'">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <h1>Editar unidades</h1>
+        </div>
+
+        <!-- Caja de Usuario -->
+        <div class="user-box dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="img/stock.jpg" alt="User Avatar" id="profileDropdown"/>
+          <span>Ann Lee</span>
+          <i class="fas fa-chevron-down ml-2"></i>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+            <li><a class="dropdown-item" href="login.html" onclick="handleLogout()">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </header>
+
+      <!-- Línea divisoria-->
+      <div class="divider"></div>
+
+      <!-- Loading inicial -->
+      <div id="loadingContainer" class="d-flex justify-content-center align-items-center" style="min-height: 300px;">
+        <div class="text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-3">Cargando unidades seleccionadas...</p>
+        </div>
+      </div>
+
+      <!-- Mensajes -->
+      <div id="messages"></div>
+
+      <!-- Navegador de productos -->
+      <div id="productNavigator" class="d-none">
+        <div class="navigator-container">
+          <div class="navigator-header">
+            <h4 class="mb-0">
+              <i class="fas fa-edit me-2"></i>
+              Editando unidad <span id="currentProductIndex">1</span> de <span id="totalProducts">0</span>
+            </h4>
+          </div>
+          <div class="navigator-controls">
+            <button class="btn btn-secondary" id="prevProduct" disabled>
+              <i class="fas fa-chevron-left me-2"></i>Anterior
+            </button>
+            <span class="product-info">
+              ID: <span id="currentProductId">-</span> | 
+              <span id="currentProductName">-</span>
+            </span>
+            <button class="btn btn-secondary" id="nextProduct">
+              Siguiente<i class="fas fa-chevron-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de edición -->
+      <div id="editForm" class="d-none">
+        <!-- Información del producto (solo lectura) -->
+        <div class="product-form-container">
+          <div class="form-header">
+            <h3><i class="fas fa-box me-2"></i>Información del producto</h3>
+          </div>
+          <div class="form-content">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="productName" class="form-label">Nombre</label>
+                  <input type="text" class="form-control" id="productName" readonly />
+                </div>
+                <div class="form-group">
+                  <label for="productModel" class="form-label">Modelo</label>
+                  <input type="text" class="form-control" id="productModel" readonly />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="productBrand" class="form-label">Marca</label>
+                  <input type="text" class="form-control" id="productBrand" readonly />
+                </div>
+                <div class="form-group">
+                  <label for="productDescription" class="form-label">Descripción</label>
+                  <textarea class="form-control" id="productDescription" rows="2" readonly></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Datos editables de la unidad -->
+        <div class="product-form-container">
+          <div class="form-header">
+            <h3><i class="fas fa-edit me-2"></i>Datos de la unidad</h3>
+          </div>
+          <div class="form-content">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="serial_number" class="form-label">Número de serie <span class="required">*</span></label>
+                  <input type="text" class="form-control" id="serial_number" required />
+                </div>
+                <div class="form-group">
+                  <label for="internal_code" class="form-label">Código de etiqueta <span class="required">*</span></label>
+                  <input type="text" class="form-control" id="internal_code" required />
+                </div>
+                <div class="form-group">
+                  <label for="observations" class="form-label">Observaciones</label>
+                  <textarea class="form-control" id="observations" rows="3"></textarea>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="notes" class="form-label">Notas</label>
+                  <textarea class="form-control" id="notes" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="fk_status_label" class="form-label">Estado/Condición</label>
+                  <select class="form-select" id="fk_status_label">
+                    <option value="">-- Cargando... --</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Asignaciones -->
+        <div class="product-form-container">
+          <div class="form-header">
+            <h3><i class="fas fa-user-tag me-2"></i>Asignaciones</h3>
+          </div>
+          <div class="form-content">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="fk_guardian" class="form-label">Resguardante</label>
+                  <select class="form-select" id="fk_guardian">
+                    <option value="">-- Cargando... --</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="fk_area" class="form-label">Área</label>
+                  <select class="form-select" id="fk_area">
+                    <option value="">-- Cargando... --</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="fk_location" class="form-label">Edificio</label>
+                  <select class="form-select" id="fk_location">
+                    <option value="">-- Cargando... --</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="fk_laboratory" class="form-label">Laboratorio</label>
+                  <select class="form-select" id="fk_laboratory">
+                    <option value="">-- Cargando... --</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="product-form-container">
+          <div class="form-content">
+            <div class="form-actions">
+              <button type="button" class="btn btn-success" id="saveCurrentUnit">
+                <i class="fas fa-save me-2"></i>Guardar unidad actual
+              </button>
+              <button type="button" class="btn btn-info ms-3" id="saveAllUnits">
+                <i class="fas fa-save me-2"></i>Guardar todas las unidades
+              </button>
+              <button type="button" class="btn btn-secondary ms-3" onclick="window.location.href='index.html'">
+                <i class="fas fa-times me-2"></i>Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado de no productos seleccionados -->
+      <div id="noProductsSelected" class="d-none">
+        <div class="alert alert-warning text-center">
+          <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+          <h4>No hay unidades seleccionadas</h4>
+          <p>No se encontraron unidades seleccionadas para editar.</p>
+          <a href="index.html" class="btn btn-primary">
+            <i class="fas fa-arrow-left me-2"></i>Volver al inventario
+          </a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Font Awesome -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <script src="js/mobile.js"></script>
+  <script src="js/session-manager.js"></script>
+  <script src="js/editar-producto.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,66 @@
+.ocupado-row {
+  background-color: #dee2e6 !important;
+  color: #6c757d;
+  font-style: italic;
+  opacity: 0.6;
+}
+    .ocupado-label {
+      font-style: italic;
+      color: #dc3545;
+    }
+
+
+        /* CSS mínimo solo para funcionalidades de expansión */
+        .expand-icon {
+            transition: transform 0.3s ease;
+            margin-right: 8px;
+        }
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+        .expanded-content {
+            display: none;
+        }
+        .expanded-content.show {
+            display: table-row;
+        }
+        .main-row {
+            cursor: pointer;
+        }
+        .expanded-details {
+            padding: 20px;
+            background-color: #f8f9fa;
+            display: flex;
+            gap: 20px;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            flex: 1;
+        }
+        .detail-item {
+            margin-bottom: 10px;
+        }
+        .detail-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .image-container {
+            flex-shrink: 0;
+            width: 150px;
+            height: 150px;
+            background-color: #e9ecef;
+            border: 2px dashed #ced4da;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .equipment-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }

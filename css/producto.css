@@ -1,0 +1,369 @@
+/* Estilos específicos para la página de productos */
+/* Hereda todos los estilos base de style.css */
+
+/* Contenedor principal del formulario */
+.product-form-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 15px rgba(0,0,0,0.05);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+/* Header del formulario */
+.form-header {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  margin: 0;
+}
+
+.form-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.form-header h3 i {
+  font-size: 1.3rem;
+}
+
+/* Contenido del formulario */
+.form-content {
+  padding: 2rem;
+}
+
+/* Grupos de formulario */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.required {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Estilos para inputs y selects */
+.form-control,
+.form-select {
+  border: 2px solid #e9ecef;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background-color: #fff;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 0.2rem rgba(26, 177, 146, 0.25);
+  outline: none;
+}
+
+.form-control:hover,
+.form-select:hover {
+  border-color: var(--primary-green);
+}
+
+/* Textareas */
+textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Input de archivo */
+.form-control[type="file"] {
+  padding: 0.5rem 1rem;
+}
+
+/* Botones de acciones */
+.form-actions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e9ecef;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Estilos de botones */
+.btn {
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--primary-green);
+  border-color: var(--primary-green);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-green-dark);
+  border-color: var(--primary-green-dark);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 177, 146, 0.3);
+}
+
+.btn-success {
+  background-color: var(--status-good);
+  border-color: var(--status-good);
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Bloques de unidades */
+.unit-block {
+  border: 2px solid #e9ecef;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.unit-block:hover {
+  border-color: var(--primary-green);
+  box-shadow: 0 4px 20px rgba(26, 177, 146, 0.15);
+}
+
+.unit-block .card-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 2px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+.unit-block .card-header h5 {
+  margin: 0;
+  color: #495057;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.unit-block .card-header h5 i {
+  color: var(--primary-green);
+}
+
+.unit-block .card-body {
+  padding: 1.5rem;
+  background-color: #fff;
+}
+
+/* Mensajes de alerta */
+.alert {
+  border-radius: 0.5rem;
+  border: none;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-left: 4px solid #dc3545;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border-left: 4px solid #28a745;
+}
+
+.alert-info {
+  background-color: #cce7ff;
+  color: #0c5460;
+  border-left: 4px solid #17a2b8;
+}
+
+.alert i {
+  margin-right: 0.5rem;
+}
+
+/* Mejoras para el resumen final */
+#output .alert ul {
+  padding-left: 1.2rem;
+}
+
+#output .alert li {
+  margin-bottom: 0.5rem;
+}
+
+/* Animaciones sutiles */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.unit-block {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* Estados de carga */
+.btn .fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .form-content {
+    padding: 1.5rem;
+  }
+  
+  .form-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .form-header h3 {
+    font-size: 1.25rem;
+  }
+  
+  .unit-block .card-body {
+    padding: 1rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .form-content {
+    padding: 1rem;
+  }
+  
+  .form-header {
+    padding: 1rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .unit-block .card-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .unit-block .card-body {
+    padding: 1rem;
+  }
+}
+
+/* Mejoras para accesibilidad */
+.form-control:focus,
+.form-select:focus,
+.btn:focus {
+  outline: 2px solid var(--primary-green);
+  outline-offset: 2px;
+}
+
+/* Estados de validación */
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: #dc3545;
+}
+
+.form-control.is-valid,
+.form-select.is-valid {
+  border-color: #28a745;
+}
+
+/* Mejoras visuales adicionales */
+.product-form-container:hover {
+  box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Separadores visuales */
+.form-actions {
+  position: relative;
+}
+
+.form-actions::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-green), transparent);
+}
+
+/* Iconos en inputs */
+.input-group-text {
+  background-color: var(--primary-green);
+  color: white;
+  border: 2px solid var(--primary-green);
+}
+
+/* Estilos para numero de unidades */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

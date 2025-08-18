@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gestión de Marcas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link href="../../css/style.css" rel="stylesheet" />
+    <style>
+        .table-actions {
+            white-space: nowrap;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            margin: 0 2px;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header" title="Menú">Inventario</div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="../../index.html"><i class="fas fa-cubes"></i> Inventario</a></li>
+                    <li><a href="../../deshabilitados.html"><i class="fas fa-archive"></i> Desactivados</a></li>
+                    <li><a href="../../pendientes.html"><i class="fas fa-exclamation-circle"></i> Pendientes Check</a></li>
+                    <li><a href="../../dashboard.html"><i class="fas fa-shield-alt"></i> Panel administrativo</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header d-flex align-items-center justify-content-between flex-wrap">
+                <h1>Gestión de Marcas</h1>
+                <div class="user-box dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="img/stock.jpg" alt="User Avatar" id="profileDropdown"/>
+                    <span>Ann Lee</span>
+                    <i class="fas fa-chevron-down ml-2"></i>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        <li><a class="dropdown-item" href="#" onclick="window.location.href='login.html'; return false;">Cerrar sesión</a></li>
+                    </ul>
+                </div>
+            </header>
+
+            <div class="divider"></div>
+
+            <!-- Botón para agregar nueva marca -->
+            <div class="mb-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h4>Lista de Marcas</h4>
+                    <p class="text-muted mb-0">Administra las marcas del sistema</p>
+                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#brandModal" onclick="openCreateModal()">
+                    <i class="fas fa-plus me-2"></i>Nueva Marca
+                </button>
+            </div>
+
+            <!-- Alerts container -->
+            <div id="alertContainer"></div>
+
+            <!-- Tabla de marcas -->
+            <div class="table-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">Total de marcas: <strong id="totalBrands">0</strong></span>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="loadBrands()">
+                        <i class="fas fa-sync-alt me-1"></i>Actualizar
+                    </button>
+                </div>
+                
+                <table class="table table-hover" id="brandsTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre de la Marca</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="brandsTableBody">
+                        <!-- Las filas se generarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="text-center py-5" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-3">Cargando marcas...</p>
+            </div>
+
+            <!-- Empty state -->
+            <div id="emptyState" class="text-center py-5" style="display: none;">
+                <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No hay marcas registradas</h5>
+                <p class="text-muted">Comienza agregando una nueva marca</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#brandModal" onclick="openCreateModal()">
+                    <i class="fas fa-plus me-2"></i>Crear Primera Marca
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para Crear/Editar Marca -->
+    <div class="modal fade" id="brandModal" tabindex="-1" aria-labelledby="brandModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="brandModalLabel">
+                        <i class="fas fa-tags me-2"></i>
+                        <span id="modalTitle">Nueva Marca</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="brandForm">
+                        <input type="hidden" id="brandId" />
+                        <div class="mb-3">
+                            <label for="brandName" class="form-label">
+                                <i class="fas fa-tag me-1"></i>Nombre de la Marca *
+                            </label>
+                            <input type="text" class="form-control" id="brandName" placeholder="Ej: Apple, Samsung, HP, Dell, etc." required>
+                            <div class="form-text">Ingresa el nombre completo de la marca</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="saveBrandBtn" onclick="saveBrand()">
+                        <i class="fas fa-save me-1"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación para Eliminar -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">¿Estás seguro de que deseas eliminar la marca <strong id="deleteBrandName"></strong>?</p>
+                    <small class="text-muted">Esta acción no se puede deshacer.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash me-1"></i>Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+
+    <script>
+        // Variables globales
+        let brands = [];
+        let currentBrandId = null;
+        const API_BASE = 'https://healtyapi.bsite.net/api';
+
+        // Función para mostrar alertas
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alertDiv);
+            
+            // Auto-remover después de 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Función para cargar todas las marcas
+        async function loadBrands() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const tableContainer = document.querySelector('.table-container');
+            const emptyState = document.getElementById('emptyState');
+            
+            try {
+                loadingIndicator.style.display = 'block';
+                tableContainer.style.display = 'none';
+                emptyState.style.display = 'none';
+                
+                const response = await fetch(`${API_BASE}/brands`);
+                if (!response.ok) throw new Error('Error al cargar las marcas');
+                
+                brands = await response.json();
+                
+                if (brands.length === 0) {
+                    loadingIndicator.style.display = 'none';
+                    emptyState.style.display = 'block';
+                } else {
+                    renderBrandsTable();
+                    loadingIndicator.style.display = 'none';
+                    tableContainer.style.display = 'block';
+                }
+                
+                updateTotalCount();
+                
+            } catch (error) {
+                console.error('Error cargando marcas:', error);
+                loadingIndicator.style.display = 'none';
+                showAlert('danger', 'Error al cargar las marcas. Por favor, intente de nuevo.');
+            }
+        }
+
+        // Función para renderizar la tabla de marcas
+        function renderBrandsTable() {
+            const tbody = document.getElementById('brandsTableBody');
+            tbody.innerHTML = '';
+            
+            brands.forEach(brand => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="badge bg-info">${brand.id}</span></td>
+                    <td>
+                        <strong>${brand.brand_name || brand.name || brand.marca || 'Sin nombre'}</strong>
+                    </td>
+                    <td class="text-center table-actions">
+                        <button class="btn btn-outline-primary btn-sm" onclick="openEditModal(${brand.id}, '${(brand.brand_name || brand.name || brand.marca || '').replace(/'/g, "\\'")}')" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="openDeleteModal(${brand.id}, '${(brand.brand_name || brand.name || brand.marca || '').replace(/'/g, "\\'")}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Función para actualizar el contador
+        function updateTotalCount() {
+            document.getElementById('totalBrands').textContent = brands.length;
+        }
+
+        // Función para abrir modal de crear
+        function openCreateModal() {
+            currentBrandId = null;
+            document.getElementById('modalTitle').textContent = 'Nueva Marca';
+            document.getElementById('brandForm').reset();
+            document.getElementById('brandId').value = '';
+            document.getElementById('saveBrandBtn').innerHTML = '<i class="fas fa-save me-1"></i>Crear Marca';
+        }
+
+        // Función para abrir modal de editar
+        function openEditModal(id, name) {
+            currentBrandId = id;
+            document.getElementById('modalTitle').textContent = 'Editar Marca';
+            document.getElementById('brandId').value = id;
+            document.getElementById('brandName').value = name;
+            document.getElementById('saveBrandBtn').innerHTML = '<i class="fas fa-save me-1"></i>Actualizar Marca';
+            
+            const modal = new bootstrap.Modal(document.getElementById('brandModal'));
+            modal.show();
+        }
+
+        // Función para guardar marca (crear o actualizar)
+        async function saveBrand() {
+            const saveBtn = document.getElementById('saveBrandBtn');
+            const brandName = document.getElementById('brandName').value.trim();
+            
+            if (!brandName) {
+                showAlert('warning', 'Por favor, ingrese el nombre de la marca.');
+                return;
+            }
+            
+            // Deshabilitar botón mientras se procesa
+            saveBtn.disabled = true;
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
+            
+            try {
+                const brandData = {
+                    brand_name: brandName
+                };
+                
+                let response;
+                if (currentBrandId) {
+                    // Actualizar marca existente
+                    brandData.id = currentBrandId;
+                    response = await fetch(`${API_BASE}/brands`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(brandData)
+                    });
+                } else {
+                    // Crear nueva marca
+                    response = await fetch(`${API_BASE}/brands`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(brandData)
+                    });
+                }
+                
+                if (!response.ok) throw new Error('Error al guardar la marca');
+                
+                // Cerrar modal y recargar datos
+                const modal = bootstrap.Modal.getInstance(document.getElementById('brandModal'));
+                modal.hide();
+                
+                showAlert('success', currentBrandId ? 'Marca actualizada correctamente.' : 'Marca creada correctamente.');
+                loadBrands();
+                
+            } catch (error) {
+                console.error('Error guardando marca:', error);
+                showAlert('danger', 'Error al guardar la marca. Por favor, intente de nuevo.');
+            } finally {
+                // Restaurar botón
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+
+        // Función para abrir modal de eliminar
+        function openDeleteModal(id, name) {
+            currentBrandId = id;
+            document.getElementById('deleteBrandName').textContent = name;
+            document.getElementById('confirmDeleteBtn').onclick = () => deleteBrand(id);
+            
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+
+        // Función para eliminar marca
+        async function deleteBrand(id) {
+            const deleteBtn = document.getElementById('confirmDeleteBtn');
+            
+            // Deshabilitar botón mientras se procesa
+            deleteBtn.disabled = true;
+            const originalText = deleteBtn.innerHTML;
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Eliminando...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/brand/Delete?id=${id}`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) throw new Error('Error al eliminar la marca');
+                
+                // Cerrar modal y recargar datos
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                modal.hide();
+                
+                showAlert('success', 'Marca eliminada correctamente.');
+                loadBrands();
+                
+            } catch (error) {
+                console.error('Error eliminando marca:', error);
+                showAlert('danger', 'Error al eliminar la marca. Por favor, intente de nuevo.');
+            } finally {
+                // Restaurar botón
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = originalText;
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBrands();
+            
+            // Enviar formulario con Enter
+            document.getElementById('brandName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveBrand();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

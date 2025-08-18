@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gestión de Usuarios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link href="../../css/style.css" rel="stylesheet" />
+    <style>
+        .table-actions {
+            white-space: nowrap;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            margin: 0 2px;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+            color: white;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .role-badge {
+            font-size: 0.75rem;
+        }
+        .search-container {
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header" title="Menú">Inventario</div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="../../index.html"><i class="fas fa-cubes"></i> Inventario</a></li>
+                    <li><a href="../../deshabilitados.html"><i class="fas fa-archive"></i> Desactivados</a></li>
+                    <li><a href="../../pendientes.html"><i class="fas fa-exclamation-circle"></i> Pendientes Check</a></li>
+                    <li><a href="../../dashboard.html"><i class="fas fa-shield-alt"></i> Panel administrativo</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header d-flex align-items-center justify-content-between flex-wrap">
+                <h1>Gestión de Usuarios</h1>
+                <div class="user-box dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="img/stock.jpg" alt="User Avatar" id="profileDropdown"/>
+                    <span>Ann Lee</span>
+                    <i class="fas fa-chevron-down ml-2"></i>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        <li><a class="dropdown-item" href="#" onclick="window.location.href='login.html'; return false;">Cerrar sesión</a></li>
+                    </ul>
+                </div>
+            </header>
+
+            <div class="divider"></div>
+
+            <!-- Controles superiores -->
+            <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h4>Lista de Usuarios</h4>
+                    <p class="text-muted mb-0">Administra los usuarios del sistema</p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <!-- Buscador -->
+                    <div class="search-container">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Buscar usuarios...">
+                            <button class="btn btn-outline-secondary" type="button" onclick="searchUsers()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal" onclick="openCreateModal()">
+                        <i class="fas fa-plus me-2"></i>Nuevo Usuario
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros por rol -->
+            <div class="mb-3">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" onclick="filterByRole('all')">
+                        Todos
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterByRole(1)">
+                        Master
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterByRole(2)">
+                        Admin
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterByRole(3)">
+                        Usuario
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alerts container -->
+            <div id="alertContainer"></div>
+
+            <!-- Tabla de usuarios -->
+            <div class="table-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">Total de usuarios: <strong id="totalUsers">0</strong></span>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="loadUsers()">
+                        <i class="fas fa-sync-alt me-1"></i>Actualizar
+                    </button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover" id="usersTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Las filas se generarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="text-center py-5" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-3">Cargando usuarios...</p>
+            </div>
+
+            <!-- Empty state -->
+            <div id="emptyState" class="text-center py-5" style="display: none;">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No hay usuarios registrados</h5>
+                <p class="text-muted">Comienza agregando un nuevo usuario</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal" onclick="openCreateModal()">
+                    <i class="fas fa-plus me-2"></i>Crear Primer Usuario
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para Crear/Editar Usuario -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalLabel">
+                        <i class="fas fa-user me-2"></i>
+                        <span id="modalTitle">Nuevo Usuario</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <input type="hidden" id="userId" />
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userName" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Nombre Completo *
+                                    </label>
+                                    <input type="text" class="form-control" id="userName" placeholder="Ej: Juan Pérez" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userEmail" class="form-label">
+                                        <i class="fas fa-envelope me-1"></i>Correo Electrónico *
+                                    </label>
+                                    <input type="email" class="form-control" id="userEmail" placeholder="usuario@ejemplo.com" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userPassword" class="form-label">
+                                        <i class="fas fa-lock me-1"></i>Contraseña *
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="userPassword" placeholder="Ingrese contraseña" required>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('userPassword')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Mínimo 6 caracteres</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userRole" class="form-label">
+                                        <i class="fas fa-user-tag me-1"></i>Rol *
+                                    </label>
+                                    <select class="form-select" id="userRole" required>
+                                        <option value="">Seleccione un rol</option>
+                                        <option value="1">Master</option>
+                                        <option value="2">Admin</option>
+                                        <option value="3">Usuario</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="saveUserBtn" onclick="saveUser()">
+                        <i class="fas fa-save me-1"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación para Eliminar -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">¿Estás seguro de que deseas eliminar al usuario <strong id="deleteUserName"></strong>?</p>
+                    <small class="text-muted">Esta acción no se puede deshacer.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash me-1"></i>Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Ver Detalles del Usuario -->
+    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewUserModalLabel">
+                        <i class="fas fa-user me-2"></i>Detalles del Usuario
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="user-avatar mx-auto mb-3" id="viewUserAvatar" style="width: 80px; height: 80px; font-size: 2rem;">
+                        </div>
+                        <h5 id="viewUserName"></h5>
+                        <span class="badge" id="viewUserRole"></span>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4"><strong>ID:</strong></div>
+                        <div class="col-sm-8" id="viewUserId"></div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-sm-4"><strong>Email:</strong></div>
+                        <div class="col-sm-8" id="viewUserEmail"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+
+    <script>
+        // Variables globales
+        let users = [];
+        let allUsers = [];
+        let currentUserId = null;
+        const API_BASE = 'https://healtyapi.bsite.net/api';
+
+        // Función para mostrar alertas
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alertDiv);
+            
+            // Auto-remover después de 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Función para obtener las iniciales del nombre
+        function getInitials(name) {
+            return name.split(' ').map(word => word.charAt(0).toUpperCase()).slice(0, 2).join('');
+        }
+
+        // Función para obtener el badge del rol
+        function getRoleBadge(roleInfo) {
+            const roleMap = {
+                'master': { class: 'bg-danger', text: 'Master' },
+                'admin': { class: 'bg-warning', text: 'Admin' },
+                'usuario': { class: 'bg-success', text: 'Usuario' }
+            };
+            
+            const roleKey = roleInfo?.rol1?.toLowerCase() || 'usuario';
+            const role = roleMap[roleKey] || roleMap['usuario'];
+            
+            return `<span class="badge ${role.class} role-badge">${role.text}</span>`;
+        }
+
+        // Función para cargar todos los usuarios
+        async function loadUsers() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const tableContainer = document.querySelector('.table-container');
+            const emptyState = document.getElementById('emptyState');
+            
+            try {
+                loadingIndicator.style.display = 'block';
+                tableContainer.style.display = 'none';
+                emptyState.style.display = 'none';
+                
+                const response = await fetch(`${API_BASE}/users`);
+                if (!response.ok) throw new Error('Error al cargar los usuarios');
+                
+                allUsers = await response.json();
+                users = [...allUsers];
+                
+                if (users.length === 0) {
+                    loadingIndicator.style.display = 'none';
+                    emptyState.style.display = 'block';
+                } else {
+                    renderUsersTable();
+                    loadingIndicator.style.display = 'none';
+                    tableContainer.style.display = 'block';
+                }
+                
+                updateTotalCount();
+                
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+                loadingIndicator.style.display = 'none';
+                showAlert('danger', 'Error al cargar los usuarios. Por favor, intente de nuevo.');
+            }
+        }
+
+        // Función para renderizar la tabla de usuarios
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                const initials = getInitials(user.name);
+                const roleBadge = getRoleBadge(user.RoleInfo);
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar me-3">${initials}</div>
+                            <div>
+                                <strong>${user.name}</strong>
+                                <div class="text-muted small">ID: ${user.id_user}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <i class="fas fa-envelope text-muted me-1"></i>
+                        ${user.email}
+                    </td>
+                    <td>${roleBadge}</td>
+                    <td class="text-center table-actions">
+                        <button class="btn btn-outline-info btn-sm" onclick="viewUser(${user.id_user})" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="openEditModal(${user.id_user})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="openDeleteModal(${user.id_user}, '${user.name.replace(/'/g, "\\'")}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Función para actualizar el contador
+        function updateTotalCount() {
+            document.getElementById('totalUsers').textContent = users.length;
+        }
+
+        // Función para buscar usuarios
+        async function searchUsers() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            
+            if (!searchTerm) {
+                users = [...allUsers];
+                renderUsersTable();
+                updateTotalCount();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/users/search?term=${encodeURIComponent(searchTerm)}`);
+                if (!response.ok) throw new Error('Error en la búsqueda');
+                
+                users = await response.json();
+                renderUsersTable();
+                updateTotalCount();
+                
+                if (users.length === 0) {
+                    showAlert('info', `No se encontraron usuarios con el término "${searchTerm}"`);
+                }
+                
+            } catch (error) {
+                console.error('Error en búsqueda:', error);
+                showAlert('danger', 'Error al buscar usuarios.');
+            }
+        }
+
+        // Función para filtrar por rol
+        function filterByRole(roleId) {
+            // Actualizar botones activos
+            document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (roleId === 'all') {
+                users = [...allUsers];
+            } else {
+                users = allUsers.filter(user => user.RoleInfo?.id_rol === roleId);
+            }
+            
+            renderUsersTable();
+            updateTotalCount();
+        }
+
+        // Función para ver detalles del usuario
+        function viewUser(userId) {
+            const user = allUsers.find(u => u.id_user === userId);
+            if (!user) return;
+            
+            document.getElementById('viewUserAvatar').textContent = getInitials(user.name);
+            document.getElementById('viewUserName').textContent = user.name;
+            document.getElementById('viewUserId').textContent = user.id_user;
+            document.getElementById('viewUserEmail').textContent = user.email;
+            document.getElementById('viewUserRole').innerHTML = getRoleBadge(user.RoleInfo);
+            
+            const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+            modal.show();
+        }
+
+        // Función para mostrar/ocultar contraseña
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const button = input.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+
+        // Función para abrir modal de crear
+        function openCreateModal() {
+            currentUserId = null;
+            document.getElementById('modalTitle').textContent = 'Nuevo Usuario';
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('saveUserBtn').innerHTML = '<i class="fas fa-save me-1"></i>Crear Usuario';
+            document.getElementById('userPassword').required = true;
+        }
+
+        // Función para abrir modal de editar
+        async function openEditModal(id) {
+            try {
+                const response = await fetch(`${API_BASE}/users/${id}`);
+                if (!response.ok) throw new Error('Error al cargar usuario');
+                
+                const user = await response.json();
+                
+                currentUserId = id;
+                document.getElementById('modalTitle').textContent = 'Editar Usuario';
+                document.getElementById('userId').value = user.id_user;
+                document.getElementById('userName').value = user.name;
+                document.getElementById('userEmail').value = user.email;
+                document.getElementById('userPassword').value = '';
+                document.getElementById('userRole').value = user.RoleInfo?.id_rol || '';
+                document.getElementById('saveUserBtn').innerHTML = '<i class="fas fa-save me-1"></i>Actualizar Usuario';
+                document.getElementById('userPassword').required = false;
+                
+                const modal = new bootstrap.Modal(document.getElementById('userModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error cargando usuario:', error);
+                showAlert('danger', 'Error al cargar los datos del usuario.');
+            }
+        }
+
+        // Función para guardar usuario (crear o actualizar)
+        async function saveUser() {
+            const saveBtn = document.getElementById('saveUserBtn');
+            const userName = document.getElementById('userName').value.trim();
+            const userEmail = document.getElementById('userEmail').value.trim();
+            const userPassword = document.getElementById('userPassword').value;
+            const userRole = document.getElementById('userRole').value;
+            
+            if (!userName || !userEmail || !userRole) {
+                showAlert('warning', 'Por favor, complete todos los campos obligatorios.');
+                return;
+            }
+
+            if (!currentUserId && !userPassword) {
+                showAlert('warning', 'La contraseña es obligatoria para nuevos usuarios.');
+                return;
+            }
+
+            if (userPassword && userPassword.length < 6) {
+                showAlert('warning', 'La contraseña debe tener al menos 6 caracteres.');
+                return;
+            }
+            
+            // Deshabilitar botón mientras se procesa
+            saveBtn.disabled = true;
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
+            
+            try {
+                const userData = {
+                    name: userName,
+                    email: userEmail,
+                    id_rol: parseInt(userRole)
+                };
+
+                if (userPassword) {
+                    userData.password = userPassword;
+                }
+                
+                let response;
+                if (currentUserId) {
+                    // Actualizar usuario existente
+                    response = await fetch(`${API_BASE}/users/${currentUserId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(userData)
+                    });
+                } else {
+                    // Crear nuevo usuario
+                    response = await fetch(`${API_BASE}/users`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(userData)
+                    });
+                }
+                
+                if (!response.ok) throw new Error('Error al guardar el usuario');
+                
+                // Cerrar modal y recargar datos
+                const modal = bootstrap.Modal.getInstance(document.getElementById('userModal'));
+                modal.hide();
+                
+                showAlert('success', currentUserId ? 'Usuario actualizado correctamente.' : 'Usuario creado correctamente.');
+                loadUsers();
+                
+            } catch (error) {
+                console.error('Error guardando usuario:', error);
+                showAlert('danger', 'Error al guardar el usuario. Por favor, intente de nuevo.');
+            } finally {
+                // Restaurar botón
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+
+        // Función para abrir modal de eliminar
+        function openDeleteModal(id, name) {
+            currentUserId = id;
+            document.getElementById('deleteUserName').textContent = name;
+            document.getElementById('confirmDeleteBtn').onclick = () => deleteUser(id);
+            
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+
+        // Función para eliminar usuario
+        async function deleteUser(id) {
+            const deleteBtn = document.getElementById('confirmDeleteBtn');
+            
+            // Deshabilitar botón mientras se procesa
+            deleteBtn.disabled = true;
+            const originalText = deleteBtn.innerHTML;
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Eliminando...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) throw new Error('Error al eliminar el usuario');
+                
+                // Cerrar modal y recargar datos
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                modal.hide();
+                
+                showAlert('success', 'Usuario eliminado correctamente.');
+                loadUsers();
+                
+            } catch (error) {
+                console.error('Error eliminando usuario:', error);
+                showAlert('danger', 'Error al eliminar el usuario. Por favor, intente de nuevo.');
+            } finally {
+                // Restaurar botón
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = originalText;
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsers();
+            
+            // Búsqueda con Enter
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchUsers();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

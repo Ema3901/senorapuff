@@ -1,0 +1,129 @@
+/* Estilos para el sistema de filtros */
+
+/* Botón de filtro activo */
+.filter-active {
+    background-color: #0d6efd !important;
+    color: white !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+}
+
+.filter-active:hover {
+    background-color: #0b5ed7 !important;
+    border-color: #0a58ca !important;
+    transform: translateY(-1px);
+}
+
+/* Mensaje de no resultados */
+.no-results {
+    padding: 2rem;
+    text-align: center;
+}
+
+.no-results i {
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.no-results h5 {
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.no-results p {
+    color: #6c757d;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+/* Estilos para los selects del modal de filtros */
+#filterModal .form-select {
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+#filterModal .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Animación para el botón de filtro */
+.btn-filter {
+    transition: all 0.3s ease;
+}
+
+.btn-filter:hover {
+    transform: translateY(-1px);
+}
+
+/* Mejorar la apariencia del modal */
+.modal-content {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* Indicador de carga para filtros */
+.filters-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.filters-loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Animación sutil para las filas de la tabla */
+.item-row {
+    transition: background-color 0.2s ease;
+}
+
+.item-row:hover {
+    background-color: #f8f9fa;
+}
+
+/* Responsive para controles */
+@media (max-width: 768px) {
+    .filters-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .filters-header .filters {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .filters-header .header-actions {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .no-results {
+        padding: 1rem;
+    }
+    
+    .no-results i {
+        font-size: 2rem !important;
+    }
+}
