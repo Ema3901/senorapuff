@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Material - Inventario</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">Inventario</div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="index.html"><i class="fas fa-boxes"></i> <span>Inventario</span></a></li>
+          <li><a href="deshabilitados.html"><i class="fas fa-trash-alt"></i> <span>Desactivados</span></a></li>
+          <li><a href="pendientes.html"><i class="fas fa-clock"></i> <span>Pendientes Check</span></a></li>
+          <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Panel administrativo</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-outline-secondary me-3" onclick="window.location.href='index.html'">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <h1>Editar Material</h1>
+        </div>
+      </header>
+
+      <div class="divider"></div>
+
+      <div class="container mt-4">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h5><i class="fas fa-box me-2"></i>Formulario de Material</h5>
+          </div>
+          <div class="card-body">
+            <form id="editMaterialForm" novalidate>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="id_material" class="form-label">ID Material</label>
+                    <input type="number" class="form-control" id="id_material" readonly>
+                  </div>
+                  <div class="mb-3">
+                    <label for="nombre_material" class="form-label">Nombre *</label>
+                    <input type="text" class="form-control" id="nombre_material" required>
+                    <div class="invalid-feedback">Por favor ingrese un nombre válido.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_brand_material" class="form-label">Marca *</label>
+                    <select class="form-select" id="fk_brand_material" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                    <div class="invalid-feedback">Por favor seleccione una marca.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="cantidad_material" class="form-label">Cantidad *</label>
+                    <input type="number" class="form-control" id="cantidad_material" min="1" max="9999" required>
+                    <div class="invalid-feedback">Por favor ingrese una cantidad válida (1-9999).</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="unidad_medida" class="form-label">Unidad de Medida *</label>
+                    <select class="form-select" id="unidad_medida" required>
+                      <option value="">-- Seleccione --</option>
+                      <option value="kg">Kilogramos (kg)</option>
+                      <option value="g">Gramos (g)</option>
+                      <option value="l">Litros (l)</option>
+                      <option value="ml">Mililitros (ml)</option>
+                      <option value="m">Metros (m)</option>
+                      <option value="cm">Centímetros (cm)</option>
+                      <option value="unidad">Unidades</option>
+                    </select>
+                    <div class="invalid-feedback">Por favor seleccione una unidad de medida.</div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="fk_categoria_material" class="form-label">Categoría *</label>
+                    <select class="form-select" id="fk_categoria_material" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                    <div class="invalid-feedback">Por favor seleccione una categoría.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_user_material" class="form-label">Resguardante *</label>
+                    <select class="form-select" id="fk_user_material" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                    <div class="invalid-feedback">Por favor seleccione un resguardante.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="descripcion_material" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="descripcion_material" rows="3" maxlength="500"></textarea>
+                    <small class="form-text text-muted">Máximo 500 caracteres.</small>
+                  </div>
+                  <div class="mb-3">
+                    <label for="fecha_caducidad" class="form-label">Fecha de Caducidad</label>
+                    <input type="date" class="form-control" id="fecha_caducidad">
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="card-footer">
+            <button type="button" class="btn btn-primary" id="btnGuardarMaterial">
+              <i class="fas fa-save me-2"></i>Guardar Cambios
+            </button>
+            <button type="button" class="btn btn-secondary ms-3" onclick="window.location.href='index.html'">
+              <i class="fas fa-times me-2"></i>Cancelar
+            </button>
+            <div class="spinner-border text-primary ms-2 d-none" id="loadingSpinner" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de confirmación -->
+  <div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmar cambios</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Está seguro de que desea guardar los cambios en este material?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btnConfirmar">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API_BASE = 'https://healtyapi.bsite.net/api';
+    let materialId = null;
+    let isLoading = false;
+
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', () => {
+      materialId = new URLSearchParams(window.location.search).get('id');
+      if (materialId) {
+        loadMaterialData();
+      } else {
+        showMessage('ID de material no proporcionado', 'error');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+      }
+      
+      loadSelectOptions();
+      setupEventListeners();
+    });
+
+    function setupEventListeners() {
+      document.getElementById('btnGuardarMaterial').addEventListener('click', validateAndShowConfirm);
+      document.getElementById('btnConfirmar').addEventListener('click', saveMaterial);
+      
+      // Validación en tiempo real
+      const inputs = document.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('blur', validateField);
+        input.addEventListener('input', clearFieldError);
+      });
+    }
+
+    async function loadMaterialData() {
+      try {
+        showLoading(true);
+        const response = await fetch(`${API_BASE}/materials/${materialId}`);
+        
+        if (!response.ok) {
+          throw new Error('Material no encontrado');
+        }
+        
+        const material = await response.json();
+        populateForm(material);
+      } catch (error) {
+        console.error('Error loading material:', error);
+        showMessage('Error al cargar los datos del material', 'error');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function loadSelectOptions() {
+      try {
+        const [brands, categories, users] = await Promise.all([
+          fetch(`${API_BASE}/brands`).then(r => r.json()),
+          fetch(`${API_BASE}/categories`).then(r => r.json()),
+          fetch(`${API_BASE}/users`).then(r => r.json())
+        ]);
+
+        populateSelect('fk_brand_material', brands, 'id_brand', 'brand_name');
+        populateSelect('fk_categoria_material', categories, 'id_categoria', 'category_name');
+        populateSelect('fk_user_material', users, 'id_user', 'name');
+      } catch (error) {
+        console.error('Error loading options:', error);
+        showMessage('Error al cargar las opciones', 'error');
+      }
+    }
+
+    function populateSelect(selectId, data, valueField, textField) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = '<option value="">-- Seleccione --</option>';
+      
+      data.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item[valueField];
+        option.textContent = item[textField];
+        select.appendChild(option);
+      });
+    }
+
+    function populateForm(material) {
+      document.getElementById('id_material').value = material.id_material || materialId;
+      document.getElementById('nombre_material').value = material.nombre || '';
+      document.getElementById('cantidad_material').value = material.cantidad || 1;
+      document.getElementById('unidad_medida').value = material.unidad_medida || '';
+      document.getElementById('descripcion_material').value = material.descripcion || '';
+      document.getElementById('fecha_caducidad').value = material.fecha_caducidad || '';
+      
+      // Set select values after options are loaded
+      setTimeout(() => {
+        if (material.fk_brand) document.getElementById('fk_brand_material').value = material.fk_brand;
+        if (material.fk_categoria) document.getElementById('fk_categoria_material').value = material.fk_categoria;
+        if (material.fk_user) document.getElementById('fk_user_material').value = material.fk_user;
+      }, 100);
+    }
+
+    function validateField(event) {
+      const field = event.target;
+      const value = field.value.trim();
+      
+      let isValid = true;
+      
+      if (field.hasAttribute('required') && !value) {
+        isValid = false;
+      } else if (field.type === 'number') {
+        const num = parseInt(value);
+        const min = parseInt(field.min) || 0;
+        const max = parseInt(field.max) || Infinity;
+        isValid = !isNaN(num) && num >= min && num <= max;
+      } else if (field.type === 'text' && field.maxLength) {
+        isValid = value.length <= parseInt(field.maxLength);
+      }
+      
+      field.classList.toggle('is-invalid', !isValid);
+      return isValid;
+    }
+
+    function clearFieldError(event) {
+      event.target.classList.remove('is-invalid');
+    }
+
+    function validateForm() {
+      const form = document.getElementById('editMaterialForm');
+      const requiredFields = form.querySelectorAll('[required]');
+      let isValid = true;
+      
+      requiredFields.forEach(field => {
+        if (!validateField({ target: field })) {
+          isValid = false;
+        }
+      });
+      
+      return isValid;
+    }
+
+    function validateAndShowConfirm() {
+      if (!validateForm()) {
+        showMessage('Por favor complete todos los campos requeridos', 'error');
+        return;
+      }
+      
+      const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+      modal.show();
+    }
+
+    async function saveMaterial() {
+      if (isLoading) return;
+      
+      const formData = {
+        nombre: document.getElementById('nombre_material').value.trim(),
+        fk_brand: parseInt(document.getElementById('fk_brand_material').value),
+        cantidad: parseInt(document.getElementById('cantidad_material').value),
+        unidad_medida: document.getElementById('unidad_medida').value,
+        fk_categoria: parseInt(document.getElementById('fk_categoria_material').value),
+        fk_user: parseInt(document.getElementById('fk_user_material').value),
+        descripcion: document.getElementById('descripcion_material').value.trim() || null,
+        fecha_caducidad: document.getElementById('fecha_caducidad').value || null
+      };
+
+      try {
+        isLoading = true;
+        showLoading(true);
+        
+        const response = await fetch(`${API_BASE}/materials/${materialId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          showMessage('Material actualizado exitosamente', 'success');
+          setTimeout(() => window.location.href = 'index.html', 1500);
+        } else {
+          const error = await response.json();
+          throw new Error(error.message || 'Error al actualizar el material');
+        }
+      } catch (error) {
+        console.error('Error saving material:', error);
+        showMessage(error.message || 'Error al guardar los cambios', 'error');
+      } finally {
+        isLoading = false;
+        showLoading(false);
+        bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+      }
+    }
+
+    function showLoading(show) {
+      const spinner = document.getElementById('loadingSpinner');
+      const button = document.getElementById('btnGuardarMaterial');
+      
+      if (show) {
+        spinner.classList.remove('d-none');
+        button.disabled = true;
+      } else {
+        spinner.classList.add('d-none');
+        button.disabled = false;
+      }
+    }
+
+    function showMessage(message, type) {
+      const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+      const alert = document.createElement('div');
+      alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+      alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      document.body.appendChild(alert);
+      
+      setTimeout(() => {
+        if (alert.parentNode) {
+          alert.remove();
+        }
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

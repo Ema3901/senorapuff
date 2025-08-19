@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Herramienta - Inventario</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">Inventario</div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="index.html"><i class="fas fa-boxes"></i> <span>Inventario</span></a></li>
+          <li><a href="deshabilitados.html"><i class="fas fa-trash-alt"></i> <span>Desactivados</span></a></li>
+          <li><a href="pendientes.html"><i class="fas fa-clock"></i> <span>Pendientes Check</span></a></li>
+          <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Panel administrativo</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-outline-secondary me-3" onclick="window.location.href='index.html'">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <h1>Editar Herramienta</h1>
+        </div>
+      </header>
+
+      <div class="divider"></div>
+
+      <div class="container mt-4">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h5><i class="fas fa-tools me-2"></i>Formulario de Herramienta</h5>
+          </div>
+          <div class="card-body">
+            <form id="editToolForm" novalidate>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="id_tool" class="form-label">ID Herramienta</label>
+                    <input type="number" class="form-control" id="id_tool" readonly>
+                  </div>
+                  <div class="mb-3">
+                    <label for="nombre_tool" class="form-label">Nombre *</label>
+                    <input type="text" class="form-control" id="nombre_tool" required>
+                    <div class="invalid-feedback">Por favor ingrese un nombre válido.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_brand_tool" class="form-label">Marca *</label>
+                    <select class="form-select" id="fk_brand_tool" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                    <div class="invalid-feedback">Por favor seleccione una marca.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="cantidad_tool" class="form-label">Cantidad *</label>
+                    <input type="number" class="form-control" id="cantidad_tool" min="1" max="9999" required>
+                    <div class="invalid-feedback">Por favor ingrese una cantidad válida (1-9999).</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="estado_tool" class="form-label">Estado *</label>
+                    <select class="form-select" id="estado_tool" required>
+                      <option value="">-- Seleccione --</option>
+                      <option value="nuevo">Nuevo</option>
+                      <option value="usado">Usado</option>
+                      <option value="dañado">Dañado</option>
+                      <option value="en_reparacion">En Reparación</option>
+                    </select>
+                    <div class="invalid-feedback">Por favor seleccione un estado.</div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="fk_categoria_tool" class="form-label">Categoría *</label>
+                    <select class="form-select" id="fk_categoria_tool" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                    <div class="invalid-feedback">Por favor seleccione una categoría.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_user_tool" class="form-label">Resguardante *</label>
+                    <select class="form-select" id="fk_user_tool" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                    <div class="invalid-feedback">Por favor seleccione un resguardante.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="descripcion_tool" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="descripcion_tool" rows="3" maxlength="500"></textarea>
+                    <small class="form-text text-muted">Máximo 500 caracteres.</small>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="card-footer">
+            <button type="button" class="btn btn-success" id="btnGuardarTool">
+              <i class="fas fa-save me-2"></i>Guardar Cambios
+            </button>
+            <button type="button" class="btn btn-secondary ms-3" onclick="window.location.href='index.html'">
+              <i class="fas fa-times me-2"></i>Cancelar
+            </button>
+            <div class="spinner-border text-success ms-2 d-none" id="loadingSpinner" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de confirmación -->
+  <div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmar cambios</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Está seguro de que desea guardar los cambios en esta herramienta?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-success" id="btnConfirmar">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API_BASE = 'https://healtyapi.bsite.net/api';
+    let toolId = null;
+    let isLoading = false;
+
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', () => {
+      toolId = new URLSearchParams(window.location.search).get('id');
+      if (toolId) {
+        loadToolData();
+      } else {
+        showMessage('ID de herramienta no proporcionado', 'error');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+      }
+      
+      loadSelectOptions();
+      setupEventListeners();
+    });
+
+    function setupEventListeners() {
+      document.getElementById('btnGuardarTool').addEventListener('click', validateAndShowConfirm);
+      document.getElementById('btnConfirmar').addEventListener('click', saveTool);
+      
+      // Validación en tiempo real
+      const inputs = document.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('blur', validateField);
+        input.addEventListener('input', clearFieldError);
+      });
+    }
+
+    async function loadToolData() {
+      try {
+        showLoading(true);
+        const response = await fetch(`${API_BASE}/tools/${toolId}`);
+        
+        if (!response.ok) {
+          throw new Error('Herramienta no encontrada');
+        }
+        
+        const tool = await response.json();
+        populateForm(tool);
+      } catch (error) {
+        console.error('Error loading tool:', error);
+        showMessage('Error al cargar los datos de la herramienta', 'error');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function loadSelectOptions() {
+      try {
+        const [brands, categories, users] = await Promise.all([
+          fetch(`${API_BASE}/brands`).then(r => r.json()),
+          fetch(`${API_BASE}/categories`).then(r => r.json()),
+          fetch(`${API_BASE}/users`).then(r => r.json())
+        ]);
+
+        populateSelect('fk_brand_tool', brands, 'id_brand', 'brand_name');
+        populateSelect('fk_categoria_tool', categories, 'id_categoria', 'category_name');
+        populateSelect('fk_user_tool', users, 'id_user', 'name');
+      } catch (error) {
+        console.error('Error loading options:', error);
+        showMessage('Error al cargar las opciones', 'error');
+      }
+    }
+
+    function populateSelect(selectId, data, valueField, textField) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = '<option value="">-- Seleccione --</option>';
+      
+      data.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item[valueField];
+        option.textContent = item[textField];
+        select.appendChild(option);
+      });
+    }
+
+    function populateForm(tool) {
+      document.getElementById('id_tool').value = tool.id_tool || toolId;
+      document.getElementById('nombre_tool').value = tool.nombre || '';
+      document.getElementById('cantidad_tool').value = tool.cantidad || 1;
+      document.getElementById('descripcion_tool').value = tool.descripcion || '';
+      document.getElementById('fecha_compra').value = tool.fecha_compra || '';
+      document.getElementById('precio_tool').value = tool.precio || '';
+      
+      // Set select values after options are loaded
+      setTimeout(() => {
+        if (tool.fk_brand) document.getElementById('fk_brand_tool').value = tool.fk_brand;
+        if (tool.fk_categoria) document.getElementById('fk_categoria_tool').value = tool.fk_categoria;
+        if (tool.fk_user) document.getElementById('fk_user_tool').value = tool.fk_user;
+        if (tool.estado) document.getElementById('estado_tool').value = tool.estado;
+      }, 100);
+    }
+
+    function validateField(event) {
+      const field = event.target;
+      const value = field.value.trim();
+      
+      let isValid = true;
+      
+      if (field.hasAttribute('required') && !value) {
+        isValid = false;
+      } else if (field.type === 'number') {
+        const num = parseInt(value);
+        const min = parseInt(field.min) || 0;
+        const max = parseInt(field.max) || Infinity;
+        isValid = !isNaN(num) && num >= min && num <= max;
+      } else if (field.type === 'text' && field.maxLength) {
+        isValid = value.length <= parseInt(field.maxLength);
+      } else if (field.type === 'date') {
+        isValid = !value || !isNaN(Date.parse(value));
+      }
+      
+      field.classList.toggle('is-invalid', !isValid);
+      return isValid;
+    }
+
+    function clearFieldError(event) {
+      event.target.classList.remove('is-invalid');
+    }
+
+    function validateForm() {
+      const form = document.getElementById('editToolForm');
+      const requiredFields = form.querySelectorAll('[required]');
+      let isValid = true;
+      
+      requiredFields.forEach(field => {
+        if (!validateField({ target: field })) {
+          isValid = false;
+        }
+      });
+      
+      return isValid;
+    }
+
+    function validateAndShowConfirm() {
+      if (!validateForm()) {
+        showMessage('Por favor complete todos los campos requeridos', 'error');
+        return;
+      }
+      
+      const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+      modal.show();
+    }
+
+    async function saveTool() {
+      if (isLoading) return;
+      
+      const formData = {
+        nombre: document.getElementById('nombre_tool').value.trim(),
+        fk_brand: parseInt(document.getElementById('fk_brand_tool').value),
+        cantidad: parseInt(document.getElementById('cantidad_tool').value),
+        estado: document.getElementById('estado_tool').value,
+        fk_categoria: parseInt(document.getElementById('fk_categoria_tool').value),
+        fk_user: parseInt(document.getElementById('fk_user_tool').value),
+        descripcion: document.getElementById('descripcion_tool').value.trim() || null,
+        fecha_compra: document.getElementById('fecha_compra').value || null,
+        precio: parseFloat(document.getElementById('precio_tool').value) || null
+      };
+
+      try {
+        isLoading = true;
+        showLoading(true);
+        
+        const response = await fetch(`${API_BASE}/tools/${toolId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          showMessage('Herramienta actualizada exitosamente', 'success');
+          setTimeout(() => window.location.href = 'index.html', 1500);
+        } else {
+          const error = await response.json();
+          throw new Error(error.message || 'Error al actualizar la herramienta');
+        }
+      } catch (error) {
+        console.error('Error saving tool:', error);
+        showMessage(error.message || 'Error al guardar los cambios', 'error');
+      } finally {
+        isLoading = false;
+        showLoading(false);
+        bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+      }
+    }
+
+    function showLoading(show) {
+      const spinner = document.getElementById('loadingSpinner');
+      const button = document.getElementById('btnGuardarTool');
+      
+      if (show) {
+        spinner.classList.remove('d-none');
+        button.disabled = true;
+      } else {
+        spinner.classList.add('d-none');
+        button.disabled = false;
+      }
+    }
+
+    function showMessage(message, type) {
+      const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+      const alert = document.createElement('div');
+      alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+      alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      document.body.appendChild(alert);
+      
+      setTimeout(() => {
+        if (alert.parentNode) {
+          alert.remove();
+        }
+      }, 5000);
+    }
+  </script>
+</body>
+</html>
