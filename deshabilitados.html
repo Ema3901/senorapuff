@@ -235,8 +235,9 @@
 
         const mainRow = document.createElement('tr');
         mainRow.className = 'main-row';
+        mainRow.setAttribute('data-product-id', item.numeroItem);
         mainRow.innerHTML = `
-          <td><input type="checkbox" /></td>
+          <td><input type="checkbox" data-product-id="${item.numeroItem}" /></td>
           <td>
             <i class="fas fa-chevron-right expand-icon" data-index="${index}"></i>
             ${item.numeroItem}
@@ -285,6 +286,123 @@
       tbody.innerHTML = '';
       nextIndexToRender = 0;
       renderNextBatch();
+    }
+
+    // ================== Funcionalidad de Reactivación ==================
+    async function reactivarProductos() {
+      // Obtener todos los checkboxes seleccionados (excepto el de "seleccionar todo")
+      const checkboxes = document.querySelectorAll('#inventoryTableBody input[type="checkbox"]:checked');
+      
+      if (checkboxes.length === 0) {
+        alert('Por favor, selecciona al menos un producto para reactivar.');
+        return;
+      }
+
+      // Confirmar la acción
+      if (!confirm(`¿Estás seguro de que deseas reactivar ${checkboxes.length} producto(s)?`)) {
+        return;
+      }
+
+      const reactivarBtn = document.getElementById('reactivarBtn');
+      const originalText = reactivarBtn.innerHTML;
+      
+      // Cambiar el botón a estado de carga
+      reactivarBtn.disabled = true;
+      reactivarBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reactivando...';
+
+      let exitosos = 0;
+      let errores = 0;
+
+      for (const checkbox of checkboxes) {
+        try {
+          // Obtener el ID del producto desde el checkbox o la fila
+          const row = checkbox.closest('tr');
+          const productId = checkbox.getAttribute('data-product-id') || 
+                          row.getAttribute('data-product-id') ||
+                          row.cells[1].textContent; // Usar el número de item como ID
+
+          if (!productId) {
+            console.error('No se pudo obtener el ID del producto');
+            errores++;
+            continue;
+          }
+
+          await reactivarProducto(productId);
+          exitosos++;
+          
+          // Remover ambas filas (principal y expandida) de la tabla después de reactivar exitosamente
+          const expandedRow = row.nextElementSibling;
+          if (expandedRow && expandedRow.classList.contains('expanded-content')) {
+            expandedRow.remove();
+          }
+          row.remove();
+          
+        } catch (error) {
+          console.error('Error al reactivar producto:', error);
+          errores++;
+        }
+      }
+
+      // Restaurar el botón
+      reactivarBtn.disabled = false;
+      reactivarBtn.innerHTML = originalText;
+
+      // Mostrar resultado
+      if (exitosos > 0) {
+        alert(`${exitosos} producto(s) reactivado(s) exitosamente.${errores > 0 ? ` ${errores} error(es).` : ''}`);
+        
+        // Actualizar el checkbox de "seleccionar todo" si existe
+        const selectAllCheckbox = document.querySelector('#inventoryTable thead input[type="checkbox"]');
+        if (selectAllCheckbox) {
+          selectAllCheckbox.checked = false;
+        }
+
+        // Verificar si quedan productos en la tabla
+        const remainingRows = document.querySelectorAll('#inventoryTableBody .main-row');
+        if (remainingRows.length === 0) {
+          showNoProductsMessage();
+        }
+      } else {
+        alert('No se pudieron reactivar los productos. Revisa la consola para más detalles.');
+      }
+    }
+
+    async function reactivarProducto(productId) {
+      const baseUrl = 'https://healtyapi.bsite.net';
+      
+      // Intentar ambos endpoints
+      const endpoints = [
+        `${baseUrl}/api/tools/toggle-status/${productId}`,
+        `${baseUrl}/api/herramientaSpecs/toggle-tool-status/${productId}`
+      ];
+
+      let lastError = null;
+
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(endpoint, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              // Agregar headers de autorización si es necesario
+              // 'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            console.log(`Producto ${productId} reactivado exitosamente en ${endpoint}`);
+            return; // Éxito, salir de la función
+          } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+        } catch (error) {
+          console.warn(`Error en endpoint ${endpoint}:`, error);
+          lastError = error;
+        }
+      }
+
+      // Si llegamos aquí, ambos endpoints fallaron
+      throw new Error(`No se pudo reactivar el producto ${productId}. Último error: ${lastError?.message}`);
     }
 
     // ================== UX: botón cargar más y sentinel ==================
@@ -414,10 +532,8 @@
         checkboxes.forEach(cb => cb.checked = e.target.checked);
       });
 
-      // Reactivar (pendiente de implementación)
-      document.getElementById('reactivarBtn').addEventListener('click', function() {
-        console.log('Función de reactivar - pendiente de implementar');
-      });
+      // Reactivar productos
+      document.getElementById('reactivarBtn').addEventListener('click', reactivarProductos);
 
       // Búsqueda
       document.getElementById('busquedaInput').addEventListener('input', function(e) {

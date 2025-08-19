@@ -162,6 +162,140 @@
     <!-- Tus scripts originales -->
     <script src="js/session-manager.js"></script>
     <script src="js/index.js"></script>
-    <script src="js/filters.js"></script></body>
-    
+    <script src="js/filters.js"></script>
+
+    <!-- Script para funcionalidad de desactivación -->
+    <script>
+        // Función para manejar la desactivación de productos
+        document.addEventListener('DOMContentLoaded', function() {
+            const desactivarBtn = document.getElementById('desactivarBtn');
+            
+            if (desactivarBtn) {
+                desactivarBtn.addEventListener('click', desactivarProductos);
+            }
+        });
+
+        async function desactivarProductos() {
+            // Obtener todos los checkboxes seleccionados (excepto el de "seleccionar todo")
+            const checkboxes = document.querySelectorAll('#inventoryTableBody input[type="checkbox"]:checked');
+            
+            if (checkboxes.length === 0) {
+                alert('Por favor, selecciona al menos un producto para desactivar.');
+                return;
+            }
+
+            // Confirmar la acción
+            if (!confirm(`¿Estás seguro de que deseas desactivar ${checkboxes.length} producto(s)?`)) {
+                return;
+            }
+
+            const desactivarBtn = document.getElementById('desactivarBtn');
+            const originalText = desactivarBtn.innerHTML;
+            
+            // Cambiar el botón a estado de carga
+            desactivarBtn.disabled = true;
+            desactivarBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Desactivando...';
+
+            let exitosos = 0;
+            let errores = 0;
+
+            for (const checkbox of checkboxes) {
+                try {
+                    // Obtener el ID del producto desde el checkbox o la fila
+                    const row = checkbox.closest('tr');
+                    const productId = checkbox.getAttribute('data-product-id') || 
+                                    row.getAttribute('data-product-id') ||
+                                    row.cells[1].textContent; // Usar el número de item como ID
+
+                    if (!productId) {
+                        console.error('No se pudo obtener el ID del producto');
+                        errores++;
+                        continue;
+                    }
+
+                    await desactivarProducto(productId);
+                    exitosos++;
+                    
+                    // Remover la fila de la tabla después de desactivar exitosamente
+                    row.remove();
+                    
+                } catch (error) {
+                    console.error('Error al desactivar producto:', error);
+                    errores++;
+                }
+            }
+
+            // Restaurar el botón
+            desactivarBtn.disabled = false;
+            desactivarBtn.innerHTML = originalText;
+
+            // Mostrar resultado
+            if (exitosos > 0) {
+                alert(`${exitosos} producto(s) desactivado(s) exitosamente.${errores > 0 ? ` ${errores} error(es).` : ''}`);
+                
+                // Actualizar el checkbox de "seleccionar todo" si existe
+                const selectAllCheckbox = document.querySelector('#inventoryTable thead input[type="checkbox"]');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                }
+            } else {
+                alert('No se pudieron desactivar los productos. Revisa la consola para más detalles.');
+            }
+        }
+
+        async function desactivarProducto(productId) {
+            const baseUrl = 'https://healtyapi.bsite.net';
+            
+            // Intentar ambos endpoints
+            const endpoints = [
+                `${baseUrl}/api/tools/toggle-status/${productId}`,
+                `${baseUrl}/api/herramientaSpecs/toggle-tool-status/${productId}`
+            ];
+
+            let lastError = null;
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // Agregar headers de autorización si es necesario
+                            // 'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        console.log(`Producto ${productId} desactivado exitosamente en ${endpoint}`);
+                        return; // Éxito, salir de la función
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.warn(`Error en endpoint ${endpoint}:`, error);
+                    lastError = error;
+                }
+            }
+
+            // Si llegamos aquí, ambos endpoints fallaron
+            throw new Error(`No se pudo desactivar el producto ${productId}. Último error: ${lastError?.message}`);
+        }
+
+        // Función auxiliar para actualizar los atributos data-product-id en las filas
+        // Debes llamar esta función cuando cargues los datos en la tabla
+        function actualizarProductIds() {
+            const rows = document.querySelectorAll('#inventoryTableBody tr');
+            
+            rows.forEach(row => {
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                const numeroItem = row.cells[1].textContent; // Asumiendo que el ID está en la segunda columna
+                
+                if (checkbox && numeroItem) {
+                    checkbox.setAttribute('data-product-id', numeroItem);
+                    row.setAttribute('data-product-id', numeroItem);
+                }
+            });
+        }
+    </script>
+</body>
 </html>
