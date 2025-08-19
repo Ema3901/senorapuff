@@ -343,6 +343,8 @@
       <nav class="sidebar-nav">
         <ul>
           <li><a href="/login.html" class="active"><i class="fas fa-cubes"></i> Inventario</a></li>
+                              <li><a href="materialinsumo.html" class="active"><i class="fas fa-cubes"></i> Inventario Material</a></li>
+                    <li><a href="herramienta.html" class="active"><i class="fas fa-cubes"></i> Inventario Herramientas</a></li>
           <li><a href="/deshabilitados.html"><i class="fas fa-archive"></i> Desactivados</a></li>
           <li><a href="/pendientes.html"><i class="fas fa-exclamation-circle"></i> Pendientes Check</a></li>
           
@@ -443,7 +445,7 @@ async function fetchData() {
     showLoading(true);
     showStatus('Cargando datos del servidor...', 'loading');
     
-    const inventoryUrl = `${API_BASE_URL}/api/herramienta/excel`;
+    const inventoryUrl = `${API_BASE_URL}/api/inventarioCombinado/Excel`;
     const productUnitsUrl = `${API_BASE_URL}/api/inv_workshop/excel`;
     
     // Realizar peticiones paralelas
@@ -770,7 +772,7 @@ async function exportInventoryTools() {
     }
     
     // Configurar anchos de columna - Aumentar ancho de columna A
-    const columnWidths = [10, 12, 8, 12, 15, 10, 8, 12, 10, 12, 12, 12];
+    const columnWidths = [10, 12, 9, 12, 15, 10, 8, 12, 10, 12, 12, 12];
     columnWidths.forEach((width, index) => {
       worksheet.getColumn(index + 1).width = width;
     });
