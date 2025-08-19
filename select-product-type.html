@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seleccionar Tipo de Producto - Inventario</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">Inventario</div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="index.html"><i class="fas fa-boxes"></i> <span>Inventario</span></a></li>
+          <li><a href="deshabilitados.html"><i class="fas fa-trash-alt"></i> <span>Desactivados</span></a></li>
+          <li><a href="pendientes.html"><i class="fas fa-clock"></i> <span>Pendientes Check</span></a></li>
+          <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Panel administrativo</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-outline-secondary me-3" onclick="window.location.href='index.html'">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <h1>Seleccionar Tipo de Producto</h1>
+        </div>
+      </header>
+
+      <div class="divider"></div>
+
+      <div class="container mt-4">
+        <div class="row">
+          <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+              <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-boxes me-2"></i>Materiales/Inputs</h4>
+              </div>
+              <div class="card-body">
+                <p class="card-text">Agregar nuevos materiales o insumos al inventario.</p>
+                <ul class="list-unstyled">
+                  <li><i class="fas fa-check text-success me-2"></i>Código de inventario</li>
+                  <li><i class="fas fa-check text-success me-2"></i>Descripción</li>
+                  <li><i class="fas fa-check text-success me-2"></i>Cantidad disponible</li>
+                  <li><i class="fas fa-check text-success me-2"></i>Ubicación</li>
+                </ul>
+                <button class="btn btn-primary w-100" onclick="redirectToAdd('materials')">
+                  <i class="fas fa-plus me-2"></i>Agregar Materiales
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+              <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-tools me-2"></i>Herramientas</h4>
+              </div>
+              <div class="card-body">
+                <p class="card-text">Agregar nuevas herramientas al inventario.</p>
+                <ul class="list-unstyled">
+                  <li><i class="fas fa-check text-success me-2"></i>Número de item</li>
+                  <li><i class="fas fa-check text-success me-2"></i>Categoría</li>
+                  <li><i class="fas fa-check text-success me-2"></i>Marca</li>
+                  <li><i class="fas fa-check text-success me-2"></i>Especificaciones</li>
+                </ul>
+                <button class="btn btn-success w-100" onclick="redirectToAdd('tools')">
+                  <i class="fas fa-plus me-2"></i>Agregar Herramientas
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+              <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="fas fa-industry me-2"></i>Workshops/Laboratorios</h4>
+              </div>
+              <div class="card-body">
+                <p class="card-text">Agregar nuevos workshops o laboratorios al inventario.</p>
+                <ul class="list-unstyled">
+                  <li><i class="fas fa-check text-success me-2"></i>ID Producto</li>
+                  <li><i class="fas fa-check text-success me-2"></i>Modelo</li>
+                  <li><i class="fas fa-check text-success me-2"></i>Serial</li>
+                  <li><i class="fas fa-check text-success me-2"></i>Observaciones</li>
+                </ul>
+                <button class="btn btn-info w-100" onclick="redirectToAdd('workshop')">
+                  <i class="fas fa-plus me-2"></i>Agregar Workshop
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function redirectToAdd(type) {
+      switch(type) {
+        case 'materials':
+          window.location.href = 'add-material.html';
+          break;
+        case 'tools':
+          window.location.href = 'add-tools.html';
+          break;
+        case 'workshop':
+          window.location.href = 'add-workshop.html';
+          break;
+      }
+    }
+  </script>
+</body>
+</html>
