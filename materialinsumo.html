@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inventario Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link href="css/style.css" rel="stylesheet" />
+    <link href="css/index.css" rel="stylesheet" />
+    <link href="css/filter.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header" title="Menú">Inventario</div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="index.html" class="active"><i class="fas fa-cubes"></i> Inventario</a></li>
+                                        <li><a href="materialinsumo.html" class="active"><i class="fas fa-cubes"></i> Inventario Material</a></li>
+                    <li><a href="herramienta.html" class="active"><i class="fas fa-cubes"></i> Inventario Herramientas</a></li>
+                    <li><a href="deshabilitados.html"><i class="fas fa-archive"></i> Desactivados</a></li>
+                    <li><a href="pendientes.html"><i class="fas fa-exclamation-circle"></i> Pendientes Check</a></li>
+                    <li><a href="dashboard.html"><i class="fas fa-shield-alt"></i> Panel administrativo</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header d-flex align-items-center justify-content-between flex-wrap">
+                <h1>Inventario</h1>
+                <div class="user-box dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="https://via.placeholder.com/35" alt="User Avatar" id="profileDropdown"/>
+                    <span>Ann Lee</span>
+                    <i class="fas fa-chevron-down ml-2"></i>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        <li><a class="dropdown-item" href="#" onclick="window.location.href='login.html'; return false;">Cerrar sesión</a></li>
+                    </ul>
+                </div>
+            </header>
+
+            <div class="controls d-flex flex-wrap align-items-center gap-3 mb-3">
+                <div class="search-box flex-grow-1 position-relative">
+                    <div class="search-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="busquedaInput" placeholder="Buscar por nombre, ID, marca, etc." />
+                        <i class="fas fa-times-circle clear-icon" onclick="limpiarBusqueda()"></i>
+                    </div>
+                </div>
+                <div class="filters-header d-flex justify-content-between w-100">
+                    <div class="filters d-flex gap-2 align-items-center">
+                        <button class="btn-filter" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                        <button class="btn-filter" aria-label="Restablecer filtros" onclick="resetFilters()">
+                            Restablecer <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="header-actions mb-3 d-flex gap-2">
+                        <button class="btn btn-danger" id="desactivarBtn">Desactivar</button>
+                        <button class="btn btn-secondary" onclick="editSelectedProducts()">Editar</button>
+                        <button class="btn btn-primary" onclick="window.location.href='add-material.html'">
+                            <i class="fas fa-plus"></i> Nuevos Productos
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" aria-label="Seleccionar todo" /></th>
+                            <th>Número de Item</th>
+                            <th>Taller/Laboratorio</th>
+                            <th>Tipo</th>
+                            <th>Nombre</th>
+                            <th>Cantidad</th>
+                            <th>Ubicación</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <!-- Las filas se generarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Filtros -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">
+                        <i class="fas fa-filter me-2"></i>Filtros de Inventario
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="filterForm">
+                        <div class="filter-section">
+                            <h6><i class="fas fa-filter me-2"></i>Filtros de Inventario</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <select class="form-select" id="filterNombreTaller">
+                                        <option value="">Taller/Laboratorio</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" id="filterTipo">
+                                        <option value="">Tipo de Material</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" id="filterMarca">
+                                        <option value="">Marca</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" id="filterFabricante">
+                                        <option value="">Fabricante</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" id="filterStatus">
+                                        <option value="">Status</option>
+                                        <option value="Activado">Activado</option>
+                                        <option value="Desactivado">Desactivado</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" id="filterCheck">
+                                        <option value="">Estado Check</option>
+                                        <option value="Realizado">Realizado</option>
+                                        <option value="Pendiente">Pendiente</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-outline-danger me-2" onclick="resetFilters()">
+                        <i class="fas fa-sync-alt me-1"></i>Limpiar Todo
+                    </button>
+                    <button type="button" class="btn btn-primary" id="applyFilters">
+                        <i class="fas fa-check me-1"></i>Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Variable global para almacenar los datos del inventario
+        let inventoryData = [];
+        let currentPage = 0;
+        const itemsPerPage = 20;
+        let isLoading = false;
+        let hasMoreData = true;
+
+        // Función para cargar datos de la API
+        async function loadInventoryData() {
+            try {
+                // Cargar datos de la API de InventarioCombinado
+                const response = await fetch('https://healtyapi.bsite.net/api/InventarioMaterialInsumo/Excel');
+                const data = await response.json();
+                
+                // Mapear los datos de la API con todos los campos del JSON
+                inventoryData = data.map(item => ({
+                    numeroDeItem: item.NumeroDeItem || 'N/A',
+                    nombreDeTallerOLaboratorio: item.NombreDeTallerOLaboratorio || 'Sin asignar',
+                    materialHerramientaOInsumo: item.MaterialHerramientaOInsumo || 'N/A',
+                    nombre: item.Nombre || 'Sin nombre',
+                    descripcion: item.Descripcion || 'Sin descripción',
+                    marca: item.Marca || 'N/A',
+                    fabricante: item.Fabricante || 'N/A',
+                    codigoDeInventario: item.CodigoDeInventario || 'N/A',
+                    cantidadEnExistencia: item.CantidadEnExistencia || 0,
+                    especificacionesTecnicas: item.EspecificacionesTecnicas || 'No especificadas',
+                    fotografia: item.Fotografia || null,
+                    observaciones: item.Observaciones || 'Sin observaciones',
+                    modelo: item.Modelo || 'N/A',
+                    numeroSerie: item.NumeroSerie || 'N/A',
+                    ubicacion: item.Ubicacion || 'Sin ubicación',
+                    status: item.Status || 'Desconocido',
+                    label: item.Label || 'No',
+                    check: item.Check || 'Pendiente'
+                }));
+
+                // Inicializar la carga de la primera página
+                currentPage = 0;
+                hasMoreData = true;
+                const tbody = document.getElementById('inventoryTableBody');
+                tbody.innerHTML = '';
+                
+                loadNextPage();
+                populateFilterOptions();
+                
+            } catch (error) {
+                console.error('Error cargando datos del inventario:', error);
+                hideLoadingIndicator();
+            }
+        }
+
+        // Función para poblar las opciones de los filtros
+        function populateFilterOptions() {
+            const talleres = [...new Set(inventoryData.map(item => item.nombreDeTallerOLaboratorio).filter(val => val && val !== 'Sin asignar'))];
+            const tipos = [...new Set(inventoryData.map(item => item.materialHerramientaOInsumo).filter(val => val && val !== 'N/A'))];
+            const marcas = [...new Set(inventoryData.map(item => item.marca).filter(val => val && val !== 'N/A'))];
+            const fabricantes = [...new Set(inventoryData.map(item => item.fabricante).filter(val => val && val !== 'N/A'))];
+
+            populateSelect('filterNombreTaller', talleres);
+            populateSelect('filterTipo', tipos);
+            populateSelect('filterMarca', marcas);
+            populateSelect('filterFabricante', fabricantes);
+        }
+
+        function populateSelect(selectId, options) {
+            const select = document.getElementById(selectId);
+            if (select) {
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    select.appendChild(optionElement);
+                });
+            }
+        }
+
+        // Función para cargar la siguiente página de datos
+        function loadNextPage() {
+            if (isLoading || !hasMoreData) return;
+            
+            isLoading = true;
+            showLoadingIndicator();
+            
+            setTimeout(() => {
+                const startIndex = currentPage * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const pageData = inventoryData.slice(startIndex, endIndex);
+                
+                if (pageData.length === 0) {
+                    hasMoreData = false;
+                    hideLoadingIndicator();
+                    isLoading = false;
+                    return;
+                }
+                
+                generateTableRows(pageData, startIndex);
+                
+                currentPage++;
+                isLoading = false;
+                hideLoadingIndicator();
+                
+                if (endIndex >= inventoryData.length) {
+                    hasMoreData = false;
+                }
+            }, 300);
+        }
+
+        // Función para generar las filas de la tabla
+        function generateTableRows(data = null, startIndex = 0) {
+            const tbody = document.getElementById('inventoryTableBody');
+            
+            if (data === null) {
+                tbody.innerHTML = '';
+                data = inventoryData;
+                startIndex = 0;
+            }
+
+            data.forEach((item, index) => {
+                const globalIndex = startIndex + index;
+                
+                // Fila principal
+                const mainRow = document.createElement('tr');
+                mainRow.className = 'main-row';
+                
+                const statusClass = item.status === 'Activado' ? 'status-activado' : 'status-desactivado';
+                const labelClass = item.label === 'Si' ? 'label-si' : 'label-no';
+                const checkClass = item.check === 'Realizado' ? 'check-realizado' : 'check-pendiente';
+                
+                mainRow.innerHTML = `
+                    <td><input type="checkbox" /></td>
+                    <td>
+                        <i class="fas fa-chevron-right expand-icon" data-index="${globalIndex}"></i>
+                        ${item.numeroDeItem}
+                    </td>
+                    <td>${item.nombreDeTallerOLaboratorio}</td>
+                    <td>${item.materialHerramientaOInsumo}</td>
+                    <td>${item.nombre}</td>
+                    <td>${item.cantidadEnExistencia}</td>
+                    <td>${item.ubicacion}</td>
+                    <td>
+                        <span class="status-badge ${statusClass}">${item.status}</span>
+                        <span class="label-badge ${labelClass}">Label: ${item.label}</span>
+                        <span class="check-badge ${checkClass}">${item.check}</span>
+                    </td>
+                `;
+
+                // Fila expandida con todos los detalles
+                const expandedRow = document.createElement('tr');
+                expandedRow.className = 'expanded-content';
+                expandedRow.id = `expanded-${globalIndex}`;
+                expandedRow.innerHTML = `
+                    <td colspan="8">
+                        <div class="expanded-details">
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Descripción</div>
+                                    <div class="detail-value">${item.descripcion}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Marca</div>
+                                    <div class="detail-value">${item.marca}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Fabricante</div>
+                                    <div class="detail-value">${item.fabricante}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Código de Inventario</div>
+                                    <div class="detail-value">${item.codigoDeInventario}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Modelo</div>
+                                    <div class="detail-value">${item.modelo}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Número de Serie</div>
+                                    <div class="detail-value">${item.numeroSerie}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Especificaciones Técnicas</div>
+                                    <div class="detail-value">${item.especificacionesTecnicas}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Observaciones</div>
+                                    <div class="detail-value">${item.observaciones}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Status</div>
+                                    <div class="detail-value">
+                                        <span class="status-badge ${statusClass}">${item.status}</span>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Label</div>
+                                    <div class="detail-value">
+                                        <span class="label-badge ${labelClass}">${item.label}</span>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Check</div>
+                                    <div class="detail-value">
+                                        <span class="check-badge ${checkClass}">${item.check}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="image-container">
+                                ${item.fotografia ? `<img src="${item.fotografia}" alt="${item.nombre}" class="equipment-image" />` : '<div style="color: #6c757d; font-style: italic;">Sin imagen</div>'}
+                            </div>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(mainRow);
+                tbody.appendChild(expandedRow);
+            });
+        }
+
+        // Función para mostrar el indicador de carga
+        function showLoadingIndicator() {
+            let loadingIndicator = document.getElementById('loadingIndicator');
+            if (!loadingIndicator) {
+                loadingIndicator = document.createElement('tr');
+                loadingIndicator.id = 'loadingIndicator';
+                loadingIndicator.innerHTML = `
+                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando más elementos...
+                    </td>
+                `;
+                document.getElementById('inventoryTableBody').appendChild(loadingIndicator);
+            }
+            loadingIndicator.style.display = 'table-row';
+        }
+
+        // Función para ocultar el indicador de carga
+        function hideLoadingIndicator() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // Función para detectar scroll y cargar más datos
+        function handleScroll() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.offsetHeight;
+            
+            if (scrollTop + windowHeight >= documentHeight - 200) {
+                loadNextPage();
+            }
+        }
+
+        // Función para manejar la expansión/contracción
+        function toggleExpansion(index) {
+            const expandedRow = document.getElementById(`expanded-${index}`);
+            const icon = document.querySelector(`[data-index="${index}"]`);
+            
+            if (expandedRow && icon) {
+                if (expandedRow.classList.contains('show')) {
+                    expandedRow.classList.remove('show');
+                    icon.classList.remove('expanded');
+                } else {
+                    expandedRow.classList.add('show');
+                    icon.classList.add('expanded');
+                }
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInventoryData();
+            window.addEventListener('scroll', handleScroll);
+            
+            document.addEventListener('click', function(e) {
+                if (e.target.type === 'checkbox') {
+                    return;
+                }
+                
+                const row = e.target.closest('.main-row');
+                if (row) {
+                    const expandIcon = row.querySelector('.expand-icon');
+                    if (expandIcon) {
+                        const index = parseInt(expandIcon.dataset.index);
+                        toggleExpansion(index);
+                    }
+                }
+            });
+        });
+
+        // Función para limpiar búsqueda
+        function limpiarBusqueda() {
+            document.getElementById('busquedaInput').value = '';
+            currentPage = 0;
+            hasMoreData = true;
+            const tbody = document.getElementById('inventoryTableBody');
+            tbody.innerHTML = '';
+            loadNextPage();
+        }
+
+        // Función para restablecer filtros
+        function resetFilters() {
+            console.log('Restableciendo filtros...');
+            // Limpiar todos los selects de filtros
+            document.getElementById('filterNombreTaller').value = '';
+            document.getElementById('filterTipo').value = '';
+            document.getElementById('filterMarca').value = '';
+            document.getElementById('filterFabricante').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterCheck').value = '';
+            limpiarBusqueda();
+        }
+
+        // Función para editar productos seleccionados
+function editSelectedProducts() {
+    const selectedCheckboxes = document.querySelectorAll('#inventoryTableBody input[type="checkbox"]:checked');
+    console.log(`✏️ Editando ${selectedCheckboxes.length} productos seleccionados`);
+
+    if (selectedCheckboxes.length === 0) {
+        alert('Por favor, selecciona al menos un producto para editar.');
+        return;
+    }
+
+    // Agrupar productos por categoría
+    const productsByCategory = {
+        material: [],
+        tools: [],
+        workshop: []
+    };
+
+    selectedCheckboxes.forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        if (row) {
+            const cells = row.querySelectorAll('td');
+            const numeroItem = cells[1]?.querySelector('strong')?.textContent || '';
+            const clase = cells[3]?.querySelector('.badge')?.textContent?.toLowerCase() || '';
+            
+            // Determinar la categoría y asignar el ID correspondiente
+            if (clase.includes('material')) {
+                productsByCategory.material.push({
+                    id_material: numeroItem,
+                    originalData: getProductDataByNumeroItem(numeroItem)
+                });
+            } else if (clase.includes('herramienta') || clase.includes('tools')) {
+                productsByCategory.tools.push({
+                    id_herramienta: numeroItem,
+                    originalData: getProductDataByNumeroItem(numeroItem)
+                });
+            } else if (clase.includes('taller') || clase.includes('workshop') || clase.includes('insumo')) {
+                productsByCategory.workshop.push({
+                    id_pruduct: numeroItem,
+                    originalData: getProductDataByNumeroItem(numeroItem)
+                });
+            }
+        }
+    });
+
+    // Verificar si hay productos válidos para editar
+    const hasValidProducts = Object.values(productsByCategory).some(category => category.length > 0);
+    
+    if (!hasValidProducts) {
+        alert('No se encontraron productos válidos para editar. Asegúrate de seleccionar productos con categorías válidas (material, herramienta o taller).');
+        return;
+    }
+
+    console.log('📊 Productos agrupados por categoría:', productsByCategory);
+
+    // Almacenar los productos seleccionados en localStorage para usarlos en la página de edición
+    localStorage.setItem('selectedProductsByCategory', JSON.stringify(productsByCategory));
+
+    // Redirigir a la página de edición correspondiente según la categoría predominante
+    let redirectUrl = 'editItems.html';
+    
+    // Determinar la categoría con más productos seleccionados
+    let maxCount = 0;
+    let dominantCategory = '';
+    
+    Object.entries(productsByCategory).forEach(([category, products]) => {
+        if (products.length > maxCount) {
+            maxCount = products.length;
+            dominantCategory = category;
+        }
+    });
+
+    // Redirigir a la página específica si todos los productos son de la misma categoría
+    if (maxCount === selectedCheckboxes.length) {
+        switch (dominantCategory) {
+            case 'material':
+                redirectUrl = 'edit-material.html';
+                break;
+            case 'tools':
+                redirectUrl = 'edit-tools.html';
+                break;
+            case 'workshop':
+                redirectUrl = 'edit-workshop.html';
+                break;
+        }
+    }
+
+    console.log(`🔄 Redirigiendo a: ${redirectUrl}`);
+    window.location.href = redirectUrl;
+}
+
+        // Funcionalidad de búsqueda mejorada
+        document.getElementById('busquedaInput')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                limpiarBusqueda();
+                return;
+            }
+            
+            // Filtrar todos los datos con búsqueda más completa
+            const filteredData = inventoryData.filter(item => {
+                const searchableText = `
+                    ${item.numeroDeItem} 
+                    ${item.nombreDeTallerOLaboratorio} 
+                    ${item.materialHerramientaOInsumo} 
+                    ${item.nombre} 
+                    ${item.ubicacion}
+                    ${item.descripcion}
+                    ${item.marca}
+                    ${item.fabricante}
+                    ${item.modelo}
+                    ${item.numeroSerie}
+                    ${item.codigoDeInventario}
+                    ${item.status}
+                `.toLowerCase();
+                
+                return searchableText.includes(searchTerm);
+            });
+            
+            // Mostrar resultados filtrados
+            const tbody = document.getElementById('inventoryTableBody');
+            tbody.innerHTML = '';
+            generateTableRows(filteredData, 0);
+            hideLoadingIndicator();
+        });
+
+        // Funcionalidad de filtros
+        document.getElementById('applyFilters')?.addEventListener('click', function() {
+            const filters = {
+                taller: document.getElementById('filterNombreTaller').value,
+                tipo: document.getElementById('filterTipo').value,
+                marca: document.getElementById('filterMarca').value,
+                fabricante: document.getElementById('filterFabricante').value,
+                status: document.getElementById('filterStatus').value,
+                check: document.getElementById('filterCheck').value
+            };
+
+            let filteredData = inventoryData.filter(item => {
+                return (!filters.taller || item.nombreDeTallerOLaboratorio === filters.taller) &&
+                       (!filters.tipo || item.materialHerramientaOInsumo === filters.tipo) &&
+                       (!filters.marca || item.marca === filters.marca) &&
+                       (!filters.fabricante || item.fabricante === filters.fabricante) &&
+                       (!filters.status || item.status === filters.status) &&
+                       (!filters.check || item.check === filters.check);
+            });
+
+            const tbody = document.getElementById('inventoryTableBody');
+            tbody.innerHTML = '';
+            generateTableRows(filteredData, 0);
+            hideLoadingIndicator();
+
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
+            modal.hide();
+        });
+
+        // Función para obtener el estado actual de carga
+        function getLoadingStatus() {
+            return {
+                currentPage,
+                itemsPerPage,
+                totalItems: inventoryData.length,
+                loadedItems: Math.min(currentPage * itemsPerPage, inventoryData.length),
+                hasMoreData,
+                isLoading
+            };
+        }
+
+        // Función para seleccionar/deseleccionar todos los checkboxes
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('th input[type="checkbox"]')) {
+                const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = e.target.checked;
+                });
+            }
+        });
+
+        // Botón desactivar con confirmación
+        document.getElementById('desactivarBtn')?.addEventListener('click', function() {
+            const selectedCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]:checked');
+            if (selectedCheckboxes.length === 0) {
+                alert('Por favor selecciona al menos un producto para desactivar.');
+                return;
+            }
+            
+            if (confirm(`¿Estás seguro de que deseas desactivar ${selectedCheckboxes.length} producto(s)?`)) {
+                console.log('Desactivando productos seleccionados...', selectedCheckboxes.length);
+                // Aquí iría la lógica para desactivar los productos
+            }
+        });
+    </script>
+</body>
+</html>
