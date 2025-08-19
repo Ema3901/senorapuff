@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agregar Herramientas - Inventario</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">Inventario</div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="index.html"><i class="fas fa-boxes"></i> <span>Inventario</span></a></li>
+          <li><a href="deshabilitados.html"><i class="fas fa-trash-alt"></i> <span>Desactivados</span></a></li>
+          <li><a href="pendientes.html"><i class="fas fa-clock"></i> <span>Pendientes Check</span></a></li>
+          <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Panel administrativo</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-outline-secondary me-3" onclick="window.location.href='select-product-type.html'">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <h1>Agregar Herramientas</h1>
+        </div>
+      </header>
+
+      <div class="divider"></div>
+
+      <div class="container mt-4">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h5><i class="fas fa-tools me-2"></i>Formulario de Herramientas</h5>
+          </div>
+          <div class="card-body">
+            <form id="addToolsForm">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="id_herramienta" class="form-label">ID Herramienta (Auto-generado)</label>
+                    <input type="number" class="form-control" id="id_herramienta" readonly>
+                  </div>
+                  <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre *</label>
+                    <input type="text" class="form-control" id="nombre" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_brand" class="form-label">Marca *</label>
+                    <select class="form-select" id="fk_brand" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="cantidad" class="form-label">Cantidad *</label>
+                    <input type="number" class="form-control" id="cantidad" min="1" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="especificaciones" class="form-label">Especificaciones</label>
+                    <textarea class="form-control" id="especificaciones" rows="3"></textarea>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="fk_categoría" class="form-label">Categoría *</label>
+                    <select class="form-select" id="fk_categoría" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_user" class="form-label">Resguardante *</label>
+                    <select class="form-select" id="fk_user" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="card-footer">
+            <button type="button" class="btn btn-success" onclick="addTool()">
+              <i class="fas fa-plus me-2"></i>Agregar Herramienta
+            </button>
+            <button type="button" class="btn btn-secondary ms-3" onclick="window.location.href='select-product-type.html'">
+              <i class="fas fa-times me-2"></i>Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = 'https://healtyapi.bsite.net/api';
+    let nextId = 1;
+
+    // Cargar datos dinámicos al iniciar
+    document.addEventListener('DOMContentLoaded', () => {
+      loadLatestId();
+      loadSelectOptions();
+    });
+
+    async function loadLatestId() {
+      try {
+        const response = await fetch(`${API_BASE}/tools`);
+        const tools = await response.json();
+        
+        if (Array.isArray(tools) && tools.length > 0) {
+          // Obtener el ID más alto
+          const maxId = Math.max(...tools.map(tool => tool.Numero_item || tool.id_herramienta || 0));
+          nextId = maxId + 1;
+        } else {
+          nextId = 1; // Si no hay herramientas, empezar desde 1
+        }
+        
+        document.getElementById('id_herramienta').value = nextId;
+      } catch (error) {
+        console.error('Error loading latest ID:', error);
+        document.getElementById('id_herramienta').value = 1;
+      }
+    }
+
+    async function loadSelectOptions() {
+      try {
+        // Cargar Marcas
+        const marcas = await fetch(`${API_BASE}/brands`).then(r => r.json());
+        populateSelect('fk_brand', marcas, 'id_brand', 'brand_name');
+
+        // Cargar Categorías
+        const categorias = await fetch(`${API_BASE}/categories`).then(r => r.json());
+        populateSelect('fk_categoría', categorias, 'id_categoria', 'category_name');
+
+        // Cargar Resguardantes (usuarios)
+        const usuarios = await fetch(`${API_BASE}/users`).then(r => r.json());
+        populateSelect('fk_user', usuarios, 'id_user', 'name');
+
+      } catch (error) {
+        console.error('Error loading select options:', error);
+        showMessage('Error al cargar opciones', 'error');
+      }
+    }
+
+    function populateSelect(selectId, data, valueField, textField) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = '<option value="">-- Seleccione --</option>';
+      
+      data.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item[valueField];
+        option.textContent = item[textField];
+        select.appendChild(option);
+      });
+    }
+    
+    function autoRefreshAfterSubmit() {
+    setTimeout(() => {
+    window.location.reload();
+      }, 2000); 
+    }
+
+    async function addTool() {
+      const form = document.getElementById('addToolsForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const formData = {
+        id_herramienta: parseInt(document.getElementById('id_herramienta').value),
+        fk_check: 1, // Siempre pendiente
+        fk_categoría: 1, // Valor fijo
+        nombre: document.getElementById('nombre').value,
+        fk_brand: parseInt(document.getElementById('fk_brand').value),
+        cantidad: parseInt(document.getElementById('cantidad').value),
+        especificaciones: document.getElementById('especificaciones').value || null,
+        fk_user: parseInt(document.getElementById('fk_user').value),
+      };
+
+      try {
+        const response = await fetch(`${API_BASE}/tools`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          showMessage('Herramienta agregada exitosamente', 'success');
+          autoRefreshAfterSubmit();
+          await loadLatestId();
+        } else {
+          const error = await response.json();
+          showMessage(`Error: ${error.message || 'No se pudo agregar la herramienta'}`, 'error');
+        }
+      } catch (error) {
+        console.error('Error adding tool:', error);
+        showMessage('Error al conectar con el servidor', 'error');
+      }
+    }
+
+    function showMessage(message, type) {
+      const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+      const alert = document.createElement('div');
+      alert.className = `alert ${alertClass} alert-dismissible fade show`;
+      alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      const container = document.querySelector('.container');
+      container.insertBefore(alert, container.firstChild);
+      
+      setTimeout(() => alert.remove(), 5000);
+    }
+  </script>
+</body>
+</html>

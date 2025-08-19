@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agregar Workshop - Inventario</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">Inventario</div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="index.html"><i class="fas fa-boxes"></i> <span>Inventario</span></a></li>
+          <li><a href="deshabilitados.html"><i class="fas fa-trash-alt"></i> <span>Desactivados</span></a></li>
+          <li><a href="pendientes.html"><i class="fas fa-clock"></i> <span>Pendientes Check</span></a></li>
+          <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Panel administrativo</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-outline-secondary me-3" onclick="window.location.href='select-product-type.html'">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <h1>Agregar Workshop/Laboratorio</h1>
+        </div>
+      </header>
+
+      <div class="divider"></div>
+
+      <div class="container mt-4">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h5><i class="fas fa-industry me-2"></i>Formulario de Workshop</h5>
+          </div>
+          <div class="card-body">
+            <form id="addWorkshopForm">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="p_name" class="form-label">Nombre *</label>
+                    <input type="text" class="form-control" id="p_name" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="quantity" class="form-label">Cantidad *</label>
+                    <input type="number" class="form-control" id="quantity" min="1" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="modelo" class="form-label">Modelo</label>
+                    <input type="text" class="form-control" id="modelo">
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_brand" class="form-label">Marca *</label>
+                    <select class="form-select" id="fk_brand" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="inv_code" class="form-label">Código de Inventario</label>
+                    <input type="text" class="form-control" id="inv_code">
+                  </div>
+                  <div class="mb-3">
+                    <label for="serial_n" class="form-label">Serial</label>
+                    <input type="text" class="form-control" id="serial_n">
+                  </div>
+                  <div class="mb-3">
+                    <label for="id_pruduct" class="form-label">ID Producto (Auto-generado)</label>
+                    <input type="number" class="form-control" id="id_pruduct" readonly>
+                  </div>
+                  <div class="mb-3"></div> 
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="specs" class="form-label">Especificaciones</label>
+                    <textarea class="form-control" id="specs" rows="3"></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="foto" class="form-label">Foto</label>
+                    <input type="text" class="form-control" id="foto" placeholder="URL de la foto">
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_lab" class="form-label">Laboratorio *</label>
+                    <select class="form-select" id="fk_lab" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_area" class="form-label">Área *</label>
+                    <select class="form-select" id="fk_area" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_location" class="form-label">Ubicación *</label>
+                    <select class="form-select" id="fk_location" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="observations" class="form-label">Observaciones</label>
+                    <textarea class="form-control" id="observations" rows="3"></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="fk_user" class="form-label">Resguardante *</label>
+                    <select class="form-select" id="fk_user" required>
+                      <option value="">-- Seleccione --</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="card-footer">
+            <button type="button" class="btn btn-info" onclick="addWorkshop()">
+              <i class="fas fa-plus me-2"></i>Agregar Workshop
+            </button>
+            <button type="button" class="btn btn-secondary ms-3" onclick="window.location.href='select-product-type.html'">
+              <i class="fas fa-times me-2"></i>Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+<script>
+    const API_BASE = 'https://healtyapi.bsite.net/api';
+    let nextId = 1;
+
+    // Cargar datos dinámicos al iniciar
+    document.addEventListener('DOMContentLoaded', () => {
+      loadLatestId();
+      loadSelectOptions();
+    });
+
+    async function loadLatestId() {
+      try {
+        const response = await fetch(`${API_BASE}/inv_workshop`);
+        const products = await response.json();
+        
+        if (Array.isArray(products) && products.length > 0) {
+          // Obtener el ID más alto
+          const maxId = Math.max(...products.map(product => product.Numero_item || product.id_pruduct || 0));
+          nextId = maxId + 1;
+        } else {
+          nextId = 1; // Si no hay herramientas, empezar desde 1
+        }
+        
+        document.getElementById('id_pruduct').value = nextId;
+      } catch (error) {
+        console.error('Error loading latest ID:', error);
+        document.getElementById('id_pruduct').value = 1;
+      }
+    }
+
+
+    async function loadSelectOptions() {
+        try {
+            // Cargar Marcas
+            const marcas = await fetch(`${API_BASE}/brands`).then(r => r.json());
+            populateSelect('fk_brand', marcas, 'id_brand', 'brand_name');
+
+            // Cargar Laboratorios
+            const laboratorios = await fetch(`${API_BASE}/laboratories`).then(r => r.json());
+            populateSelect('fk_lab', laboratorios, 'id_lab', 'lab_name');
+
+            // Cargar Áreas
+            const areas = await fetch(`${API_BASE}/areas`).then(r => r.json());
+            populateSelect('fk_area', areas, 'id_area', 'area_name');
+
+            // Cargar Ubicaciones
+            const ubicaciones = await fetch(`${API_BASE}/product_location`).then(r => r.json());
+            populateSelect('fk_location', ubicaciones, 'id_location', 'location_name');
+
+            // Cargar Usuarios (Resguardantes)
+            const usuarios = await fetch(`${API_BASE}/users`).then(r => r.json());
+            populateSelect('fk_user', usuarios, 'id_user', 'name');
+
+        } catch (error) {
+            console.error('Error loading select options:', error);
+            showMessage('Error al cargar opciones', 'error');
+        }
+    }
+
+    function populateSelect(selectId, data, valueField, textField) {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">-- Seleccione --</option>';
+        
+        data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item[valueField];
+            option.textContent = item[textField];
+            select.appendChild(option);
+        });
+    }
+
+    function autoRefreshAfterSubmit() {
+    setTimeout(() => {
+    window.location.reload();
+      }, 2000); // Refresca después de 2 segundos
+    }
+
+    async function addWorkshop() {
+        const form = document.getElementById('addWorkshopForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const formData = {
+            id_pruduct: parseInt(document.getElementById('id_pruduct').value),  
+            fk_taller: 1, // Valor fijo según especificación
+            fk_check: 1, // Siempre pendiente
+            p_name: document.getElementById('p_name').value,
+            quantity: parseInt(document.getElementById('quantity').value),
+            modelo: document.getElementById('modelo').value || null,
+            fk_brand: parseInt(document.getElementById('fk_brand').value),
+            inv_code: document.getElementById('inv_code').value || null,
+            serial_n: document.getElementById('serial_n').value || null,
+            specs: document.getElementById('specs').value || null,
+            foto: document.getElementById('foto').value || null,
+            fk_lab: parseInt(document.getElementById('fk_lab').value),
+            fk_area: parseInt(document.getElementById('fk_area').value),
+            fk_location: parseInt(document.getElementById('fk_location').value),
+            observations: document.getElementById('observations').value || null,
+            fk_label: 1, // Valor fijo según especificación
+            fk_user: parseInt(document.getElementById('fk_user').value),
+            fk_status: 1 // Valor fijo según especificación
+        };
+
+        try {
+        const response = await fetch(`${API_BASE}/inv_workshop`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          showMessage('Producto agregado exitosamente', 'success');
+          autoRefreshAfterSubmit();
+          await loadLatestId();
+          
+        } else {
+          const error = await response.json();
+          showMessage(`Error: ${error.message || 'No se pudo agregar el producto'}`, 'error');
+        }
+      } catch (error) {
+        console.error('Error adding product:', error);
+        showMessage('Error al conectar con el servidor', 'error');
+      }
+    }
+
+    function showMessage(message, type) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const alert = document.createElement('div');
+        alert.className = `alert ${alertClass} alert-dismissible fade show`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.container');
+        container.insertBefore(alert, container.firstChild);
+        
+        setTimeout(() => alert.remove(), 5000);
+    }
+
+    // Función para resetear contador (opcional, útil para desarrollo)
+    function resetWorkshopCounter() {
+        lastIds.workshop = 1000;
+        updateStoredIds();
+        console.log('Contador de Workshop reseteado a 1000');
+    }
+</script>
+</body>
+</html>
